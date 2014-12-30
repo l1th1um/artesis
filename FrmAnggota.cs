@@ -93,14 +93,15 @@ namespace Artesis
         public int maxUrutRT(String rt)
         {
             using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
-            {
-                conn.Open();
+            {                
                 string command = "SELECT MAX(urut_rt) as maks_urut FROM members WHERE rt = '" + rt + "'";
 
                 Console.WriteLine(command);
 
                 using (SQLiteCommand cmd = new SQLiteCommand(command, conn))
                 {
+                    conn.Open();
+
                     using (SQLiteDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
@@ -119,8 +120,10 @@ namespace Artesis
                             return 0;
                         }
                     }
+                    
+                    conn.Close();
                 }
-                conn.Close();
+                
             }            
         }
 

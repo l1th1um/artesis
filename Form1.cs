@@ -301,10 +301,26 @@ namespace Artesis
             lblMeteran.Text = "Data Meteran Bulan " + periode;
             lblMeteran.Visible = true;
 
+            DateTime dt = new DateTime(Convert.ToInt32(CBTahun.SelectedItem), Convert.ToInt32(cbBulan.SelectedValue), 01);
+            DateTime dt2 = dt.AddMonths(-1);
+
+            String blnSebelum = String.Format("{0:yyyy-MM-dd}", dt2);
+
+            /*
             String query = "SELECT m.id, m.nama, t.awal, t.akhir,bayar ";
                    query += " FROM members m";
                    query += " LEFT JOIN meteran t ON m.id = t.member_id AND t.tanggal = '"+ tanggal + "'";
+                   query += " WHERE m.active = 1";*/
+
+            String query = "SELECT m.id, m.nama, ";
+                   query += " ifnull(t.awal, (SELECT ifnull(akhir, 0) FROM members m2 ";
+                   query += " LEFT JOIN meteran t2 ON m2.id = t2.member_id AND t2.tanggal = '" + blnSebelum + "'";
+                   query += " where m2.id = m.id)) as awal,   t.akhir, bayar ";
+                   query += " FROM members m ";
+                   query += " LEFT JOIN meteran t ON m.id = t.member_id AND t.tanggal = '" + tanggal + "'";
                    query += " WHERE m.active = 1";
+
+                   System.Diagnostics.Debug.WriteLine(query);
 
                    using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
                    {
@@ -521,6 +537,12 @@ namespace Artesis
                     {
                         SQLiteCommand cmd2 = new SQLiteCommand("INSERT INTO meteran ('" + field + "', member_id, tanggal, bayar, updated_at)  VALUES(" + meteranVal + ",  " + member_id + ",'" + tglTxt.Text + "', 0, datetime('now') )", conn);
                         cmd2.ExecuteNonQuery();
+
+                        if (columnIdx == 3)
+                        {
+                            SQLiteCommand cmd3 = new SQLiteCommand("UPDATE meteran SET  awal = '" + float.Parse(dgvMeteran.CurrentRow.Cells[2].Value.ToString()) + "', updated_at = datetime('now') WHERE  member_id = " + member_id + " AND bayar = 0 AND tanggal = '" + tglTxt.Text + "'", conn);
+                            cmd3.ExecuteNonQuery();
+                        }
                     }
                 }
                 conn.Close();                
@@ -751,12 +773,20 @@ namespace Artesis
             {
                 conn.Open();
 
+                SQLiteCommand cmd = new SQLiteCommand("BEGIN", conn);
+                cmd.ExecuteNonQuery();
+                cmd.Dispose();
+
+                /*
                 using (SQLiteCommand cmd = new SQLiteCommand("UPDATE meteran SET  bayar = 1, bayar_at = datetime('now') WHERE  member_id = " + memberTagihan + " AND bayar = 0 AND tanggal = '" + tanggalTagihan + "'", conn))
-                {
+                {*/
+
+                cmd = new SQLiteCommand("UPDATE meteran SET  bayar = 1, bayar_at = datetime('now') WHERE  member_id = " + memberTagihan + " AND bayar = 0 AND tanggal = '" + tanggalTagihan + "'", conn);
 
                     //cmd.Connection.Open();                    
                     int rowsAffected = cmd.ExecuteNonQuery();  //Deadlock in Here
-                    
+                    cmd.Dispose();
+
                     if (rowsAffected > 0)
                     {
                         //Check Max Invoice
@@ -779,7 +809,7 @@ namespace Artesis
                                 max_invoice = reader2.GetInt32(0) + 1;
                             }
                         }
-
+                        cmd2.Dispose();
                         invoiceBayar = string.Format("{0:000}", max_invoice) + suffix;
                         //End Check Max Invoice
 
@@ -796,7 +826,7 @@ namespace Artesis
                             meteran_id = reader3.GetInt32(0);
                         }
 
-
+                        cmd3.Dispose();
                         //End Check Max Invoice
 
 
@@ -805,6 +835,11 @@ namespace Artesis
 
                         SQLiteCommand cmd4 = new SQLiteCommand(savePayment, conn);
                         cmd4.ExecuteNonQuery();
+                        cmd4.Dispose();
+
+                        cmd = new SQLiteCommand("END", conn);
+                        cmd.ExecuteNonQuery();
+                        cmd.Dispose();
 
                         PrintDialog printDialog = new PrintDialog();
 
@@ -830,8 +865,13 @@ namespace Artesis
                     {
                         MessageBox.Show("Error ! Data Pembayaran tidak disimpan");
                     }
-                }                
+                //}  
+
+                
+
+
                 conn.Close();
+                conn.Dispose();
             }
 
             this.pembayaranTagihanToolStripMenuItem_Click(sender, e);
@@ -842,9 +882,9 @@ namespace Artesis
             Graphics graphic = e.Graphics;
 
             Font font = new Font("Arial", 12, GraphicsUnit.Pixel);
-            Font fontUnderline = new Font("Arial", 12, FontStyle.Underline | FontStyle.Bold, GraphicsUnit.Pixel);
-            Font fontHeader1 = new Font("Arial", 14, FontStyle.Bold, GraphicsUnit.Pixel);
-            Font fontHeader2 = new Font("Arial", 12, FontStyle.Bold, GraphicsUnit.Pixel);
+            Font fontUnderline = new Font("Arial", 16, FontStyle.Underline | FontStyle.Bold, GraphicsUnit.Pixel);
+            Font fontHeader1 = new Font("Arial", 16, FontStyle.Bold, GraphicsUnit.Pixel);
+            Font fontHeader2 = new Font("Arial", 14, FontStyle.Bold, GraphicsUnit.Pixel);
 
             float fontHeight = font.GetHeight();
 
@@ -858,7 +898,7 @@ namespace Artesis
             int tab5 = 670;
             int recWidth = 60;
             int recHeight = 20;
-            int spacing = 20;
+            int spacing = 30;
 
             StringFormat stringFormat = new StringFormat();
             stringFormat.Alignment = StringAlignment.Far;
@@ -869,13 +909,13 @@ namespace Artesis
             String periode = blnBayar + " " + thnBayar;
 
             graphic.DrawString("PENGELOLA AIR ARTESIS PERUM LAKSANA MEKAR ASRI", fontHeader1, new SolidBrush(Color.Black), startX + 180, startY);
-            
+
             graphic.DrawString("RW 09 Desa Laksana Mekar Kec. Padalarang Kab. Bandung Barat", fontHeader1, new SolidBrush(Color.Black), startX + 160, startY + offset);
-            offset += 30;
+            offset += 50;
 
             graphic.DrawString("KUITANSI PEMBAYARAN AIR BULAN " + periode, fontHeader2, new SolidBrush(Color.Black), startX + 220, startY + offset);
 
-            offset += 40;
+            offset += 60;
 
             //Logo
             /*
@@ -910,7 +950,7 @@ namespace Artesis
             graphic.DrawString("No. Urut", font, new SolidBrush(Color.Black), startX, startY + offset);
             graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
             graphic.DrawString(noUrutRTBayar, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
-            
+
             graphic.DrawString("Jumlah Pemakaian", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
             graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
             graphic.DrawString(pemakaianBayar.ToString("N") + " m3", font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
@@ -920,7 +960,7 @@ namespace Artesis
             graphic.DrawString("Nama", font, new SolidBrush(Color.Black), startX, startY + offset);
             graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
             graphic.DrawString(namaBayar, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
-            
+
             graphic.DrawString("Beban Tetap", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
             graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
             graphic.DrawString(bebanTetap.ToString("N0"), font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
@@ -936,7 +976,7 @@ namespace Artesis
             graphic.DrawString(bebanBayar.ToString("N0"), font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
 
             offset += spacing;
-            
+
             DateTime now = DateTime.Now;
             String current = now.Day.ToString() + " " + bulanDic[now.ToString("MM")] + " " + now.Year.ToString();
 
@@ -950,12 +990,12 @@ namespace Artesis
             graphic.DrawString(dendaBayar.ToString("N0"), font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
 
             offset += spacing;
-            
+
             graphic.DrawString("Tanggal Pembayaran", font, new SolidBrush(Color.Black), startX, startY + offset);
             graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
             graphic.DrawString(current, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
 
-            graphic.DrawString("Jumlah yang harus dibayarkan", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
+            graphic.DrawString("TOTAL", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
             graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
             graphic.DrawString(totalBayar.ToString("N0"), fontUnderline, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
 

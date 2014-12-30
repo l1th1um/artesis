@@ -846,9 +846,9 @@
             this.panelContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelContainer.Controls.Add(this.panelMeteranBulanan);
             this.panelContainer.Controls.Add(this.panelTagihan);
             this.panelContainer.Controls.Add(this.panelMember);
-            this.panelContainer.Controls.Add(this.panelMeteranBulanan);
             this.panelContainer.Location = new System.Drawing.Point(12, 27);
             this.panelContainer.Name = "panelContainer";
             this.panelContainer.Size = new System.Drawing.Size(984, 481);
