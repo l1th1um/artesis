@@ -317,20 +317,20 @@ namespace Artesis
             {
                 conn.Open();
                 string command = "SELECT nama FROM members WHERE id = " + id;
-                SQLiteCommand query = new SQLiteCommand(command, conn);
-
-                SQLiteDataReader reader = query.ExecuteReader();
-
-                if (reader.Read())
+                using (SQLiteCommand query = new SQLiteCommand(command, conn))
                 {
-                    return reader.GetValue(0).ToString();
+                    using (SQLiteDataReader reader = query.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return reader.GetValue(0).ToString();
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
                 }
-                else
-                {
-                    return "";
-                }
-
-                conn.Close();
             }
         }
 

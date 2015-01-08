@@ -227,7 +227,7 @@ namespace Artesis
                             updateMemberDialog.isUpdate.Text = "1";
                             updateMemberDialog.memberID.Text = reader["id"].ToString();
 
-                            reader.Close();
+                            reader.Dispose();
 
                             DialogResult dr = new DialogResult();
 
@@ -430,6 +430,7 @@ namespace Artesis
                 CBTahun.SelectedItem = now.Year.ToString();
                 cbTahunTghn.SelectedItem = now.Year.ToString();
 
+                reader.Dispose();
                 conn.Close();
             }
         }
@@ -664,18 +665,17 @@ namespace Artesis
                 string command = "SELECT nama FROM members WHERE id = " + id;
                 SQLiteCommand query = new SQLiteCommand(command, conn);
 
-                SQLiteDataReader reader = query.ExecuteReader();
-
-                if (reader.Read())
+                using (SQLiteDataReader reader = query.ExecuteReader())
                 {
-                    return reader.GetValue(0).ToString();
+                    if (reader.Read())
+                    {
+                        return reader.GetValue(0).ToString();
+                    }
+                    else
+                    {
+                        return "";
+                    }
                 }
-                else
-                {
-                    return "";
-                }
-
-                conn.Close();
             }
         }
 
@@ -798,18 +798,21 @@ namespace Artesis
 
                         int max_invoice = 1;
 
-                        SQLiteCommand cmd2 = new SQLiteCommand(command2, conn);
-
-                        SQLiteDataReader reader2 = cmd2.ExecuteReader();
-
-                        if (reader2.Read())
+                        using (SQLiteCommand cmd2 = new SQLiteCommand(command2, conn))
                         {
-                            if (reader2["max_invoice"] != DBNull.Value)
+                            using (SQLiteDataReader reader2 = cmd2.ExecuteReader())
                             {
-                                max_invoice = reader2.GetInt32(0) + 1;
+
+                                if (reader2.Read())
+                                {
+                                    if (reader2["max_invoice"] != DBNull.Value)
+                                    {
+                                        max_invoice = reader2.GetInt32(0) + 1;
+                                    }
+                                }
                             }
+
                         }
-                        cmd2.Dispose();
                         invoiceBayar = string.Format("{0:000}", max_invoice) + suffix;
                         //End Check Max Invoice
 
@@ -818,25 +821,28 @@ namespace Artesis
 
                         string command3 = "SELECT id FROM meteran WHERE member_id = " + memberTagihan + " AND tanggal = '" + tanggalTagihan + "'";
 
-                        SQLiteCommand cmd3 = new SQLiteCommand(command3, conn);
-                        SQLiteDataReader reader3 = cmd3.ExecuteReader();
-
-                        if (reader3.Read())
+                        using (SQLiteCommand cmd3 = new SQLiteCommand(command3, conn))
                         {
-                            meteran_id = reader3.GetInt32(0);
-                        }
+                            using (SQLiteDataReader reader3 = cmd3.ExecuteReader())
+                            {
+                                if (reader3.Read())
+                                {
+                                    meteran_id = reader3.GetInt32(0);
+                                }
+                            }
 
-                        cmd3.Dispose();
+                        }
                         //End Check Max Invoice
 
 
                         String savePayment = "INSERT INTO pembayaran(meteran_id, no_invoice, invoice_suffix, jumlah, tgl_bayar) VALUES  ";
                         savePayment += "(" + meteran_id + ", " + max_invoice + ", '" + suffix + "', " + totalBayar + " , datetime('now'))";
 
-                        SQLiteCommand cmd4 = new SQLiteCommand(savePayment, conn);
-                        cmd4.ExecuteNonQuery();
-                        cmd4.Dispose();
-
+                        using (SQLiteCommand cmd4 = new SQLiteCommand(savePayment, conn))
+                        {
+                            cmd4.ExecuteNonQuery();
+                        }
+                        
                         cmd = new SQLiteCommand("END", conn);
                         cmd.ExecuteNonQuery();
                         cmd.Dispose();
@@ -896,10 +902,10 @@ namespace Artesis
             int tab3 = 500;
             int tab4 = 650;
             int tab5 = 670;
-            int recWidth = 60;
+            int recWidth = 90;
             int recHeight = 20;
             int spacing = 30;
-
+                
             StringFormat stringFormat = new StringFormat();
             stringFormat.Alignment = StringAlignment.Far;
             stringFormat.LineAlignment = StringAlignment.Near;
@@ -1112,8 +1118,7 @@ namespace Artesis
                             return 0;
                         }
                     }
-                }
-                conn.Close();
+                }                
             }
         }
 

@@ -96,7 +96,7 @@ namespace Artesis
                     {
                         if (reader.Read())
                         {
-                            this.DialogResult = DialogResult.OK;
+                            this.DialogResult = DialogResult.OK;                            
                         }
                         else
                         {
@@ -109,6 +109,7 @@ namespace Artesis
                         }
                     }
                 }
+                
                 conn.Close();
             }
             

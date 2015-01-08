@@ -120,10 +120,7 @@ namespace Artesis
                             return 0;
                         }
                     }
-                    
-                    conn.Close();
-                }
-                
+                }                
             }            
         }
 
