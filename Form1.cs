@@ -11,6 +11,9 @@ using System.Drawing.Printing;
 using System.Drawing.Drawing2D;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using Excel = Microsoft.Office.Interop.Excel;
+using System.Reflection;
+
 
 namespace Artesis
 {
@@ -26,7 +29,7 @@ namespace Artesis
         String memberTagihan;
 
         //Detail Meteran
-        Dictionary<double, double> usage = new Dictionary<double, double>();        
+        Dictionary<double, double> usage = new Dictionary<double, double>();
 
         //Untuk di Print
         String blnBayar;
@@ -61,7 +64,7 @@ namespace Artesis
             this.loadMember();
 
             this.getMonth();
-            
+
             this.getYear();
 
             this.prepareTarif();
@@ -78,7 +81,7 @@ namespace Artesis
         }
 
         private void prepareComboBoxMember()
-        {   
+        {
             using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
             {
                 conn.Open();
@@ -99,13 +102,13 @@ namespace Artesis
 
                     cbAnggota.ValueMember = "id";
                     cbAnggota.DisplayMember = "nama_anggota";
-                    cbAnggota.DataSource = dt;        
+                    cbAnggota.DataSource = dt;
                 }
                 conn.Close();
-            }            
+            }
         }
 
-        private void loadMember(string order_by = "id", string order ="ASC")
+        private void loadMember(string order_by = "id", string order = "ASC")
         {
             //Start Grid Member
             using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
@@ -163,7 +166,7 @@ namespace Artesis
                             if (reader.Read())
                             {
                                 String rt = reader["rt"].ToString();
-                                lblAlamat.Text = "Blok " + reader["blok"].ToString() + " No " + reader["no_rumah"] + " RT " + rt +"/09";
+                                lblAlamat.Text = "Blok " + reader["blok"].ToString() + " No " + reader["no_rumah"] + " RT " + rt + "/09";
                                 lblAlamat2.Visible = true;
 
                                 noUrutRTBayar = string.Format("{0:00}.{1}", reader["urut_rt"], rt);
@@ -179,12 +182,12 @@ namespace Artesis
         {
             Application.Exit();
         }
-                
+
         private void dataPelangganToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.loadMember();
             this.closePanel();
-            
+
             panelMember.Visible = true;
         }
 
@@ -241,7 +244,7 @@ namespace Artesis
                     }
                 }
                 conn.Close();
-            }                        
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -263,7 +266,7 @@ namespace Artesis
             using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
             {
                 conn.Open();
-                
+
                 using (SQLiteCommand cmd = new SQLiteCommand("UPDATE members SET active = 0 WHERE id = " + Id, conn))
                 {
                     cmd.ExecuteNonQuery();
@@ -272,7 +275,7 @@ namespace Artesis
                 conn.Close();
             }
             //cmd.Dispose();
-            
+
         }
 
         private void dataMeteranToolStripMenuItem_Click(object sender, EventArgs e)
@@ -293,7 +296,7 @@ namespace Artesis
         private void prepareMeteran()
         {
             this.clearDatagridMeteran();
-            
+
             String tanggal = CBTahun.SelectedItem + "-" + cbBulan.SelectedValue + "-01";
             tglTxt.Text = tanggal;
 
@@ -313,79 +316,79 @@ namespace Artesis
                    query += " WHERE m.active = 1";*/
 
             String query = "SELECT m.id, m.nama, ";
-                   query += " ifnull(t.awal, (SELECT ifnull(akhir, 0) FROM members m2 ";
-                   query += " LEFT JOIN meteran t2 ON m2.id = t2.member_id AND t2.tanggal = '" + blnSebelum + "'";
-                   query += " where m2.id = m.id)) as awal,   t.akhir, bayar ";
-                   query += " FROM members m ";
-                   query += " LEFT JOIN meteran t ON m.id = t.member_id AND t.tanggal = '" + tanggal + "'";
-                   query += " WHERE m.active = 1";
+            query += " ifnull(t.awal, (SELECT ifnull(akhir, 0) FROM members m2 ";
+            query += " LEFT JOIN meteran t2 ON m2.id = t2.member_id AND t2.tanggal = '" + blnSebelum + "'";
+            query += " where m2.id = m.id)) as awal,   t.akhir, bayar ";
+            query += " FROM members m ";
+            query += " LEFT JOIN meteran t ON m.id = t.member_id AND t.tanggal = '" + tanggal + "'";
+            query += " WHERE m.active = 1";
 
-                   System.Diagnostics.Debug.WriteLine(query);
+            System.Diagnostics.Debug.WriteLine(query);
 
-                   using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
-                   {
-                       conn.Open();
-                       sda = new SQLiteDataAdapter(query, conn);
-                       ds = new System.Data.DataSet();
+            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
+            {
+                conn.Open();
+                sda = new SQLiteDataAdapter(query, conn);
+                ds = new System.Data.DataSet();
 
-                       sda.Fill(ds, "Meteran_List");
+                sda.Fill(ds, "Meteran_List");
 
-                       dgvMeteran.DataSource = ds.Tables[0];
+                dgvMeteran.DataSource = ds.Tables[0];
 
-                       //dgvMeteran.DefaultCellStyle.SelectionBackColor = dgvMeteran.DefaultCellStyle.BackColor;
-                       //dgvMeteran.DefaultCellStyle.SelectionForeColor = dgvMeteran.DefaultCellStyle.ForeColor;
+                //dgvMeteran.DefaultCellStyle.SelectionBackColor = dgvMeteran.DefaultCellStyle.BackColor;
+                //dgvMeteran.DefaultCellStyle.SelectionForeColor = dgvMeteran.DefaultCellStyle.ForeColor;
 
-                       dgvMeteran.Columns[0].HeaderText = "ID Anggota";
-                       dgvMeteran.Columns[1].HeaderText = "Nama";
-                       dgvMeteran.Columns[2].HeaderText = "Awal";
-                       dgvMeteran.Columns[3].HeaderText = "Akhir";
-                       dgvMeteran.Columns[4].HeaderText = "Bayar";
-                       //dgvMeteran.Columns[5].HeaderText = "Print";
+                dgvMeteran.Columns[0].HeaderText = "ID Anggota";
+                dgvMeteran.Columns[1].HeaderText = "Nama";
+                dgvMeteran.Columns[2].HeaderText = "Awal";
+                dgvMeteran.Columns[3].HeaderText = "Akhir";
+                dgvMeteran.Columns[4].HeaderText = "Bayar";
+                //dgvMeteran.Columns[5].HeaderText = "Print";
 
 
-                       dgvMeteran.Columns[4].Visible = false;
-                       //dgvMeteran.Columns[5].Visible = false;
+                dgvMeteran.Columns[4].Visible = false;
+                //dgvMeteran.Columns[5].Visible = false;
 
-                       dgvMeteran.Columns[0].Width = 100;
-                       dgvMeteran.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                       dgvMeteran.Columns[2].Width = 100;
-                       dgvMeteran.Columns[3].Width = 100;
+                dgvMeteran.Columns[0].Width = 100;
+                dgvMeteran.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                dgvMeteran.Columns[2].Width = 100;
+                dgvMeteran.Columns[3].Width = 100;
 
-                       dgvMeteran.ReadOnly = false;
-                       dgvMeteran.Columns[0].ReadOnly = true;
-                       dgvMeteran.Columns[1].ReadOnly = true;
+                dgvMeteran.ReadOnly = false;
+                dgvMeteran.Columns[0].ReadOnly = true;
+                dgvMeteran.Columns[1].ReadOnly = true;
 
-                       DataGridViewImageColumn imageCol = new DataGridViewImageColumn();
-                       imageCol.HeaderText = "Bayar";
-                       imageCol.Name = "image";
-                       imageCol.Image = Properties.Resources.no_image;
-                       dgvMeteran.Columns.Add(imageCol);
+                DataGridViewImageColumn imageCol = new DataGridViewImageColumn();
+                imageCol.HeaderText = "Bayar";
+                imageCol.Name = "image";
+                imageCol.Image = Properties.Resources.no_image;
+                dgvMeteran.Columns.Add(imageCol);
 
-                       //Image Column Print
-                       DataGridViewImageColumn imagePrint = new DataGridViewImageColumn();
-                       imagePrint.HeaderText = "";
-                       imagePrint.Name = "imagePrint";
-                       imagePrint.Image = Properties.Resources.no_image;
-                       dgvMeteran.Columns.Add(imagePrint);
-                       dgvMeteran.CellClick += new DataGridViewCellEventHandler(dgvMeteran_CellClick);
+                //Image Column Print
+                DataGridViewImageColumn imagePrint = new DataGridViewImageColumn();
+                imagePrint.HeaderText = "";
+                imagePrint.Name = "imagePrint";
+                imagePrint.Image = Properties.Resources.no_image;
+                dgvMeteran.Columns.Add(imagePrint);
+                dgvMeteran.CellClick += new DataGridViewCellEventHandler(dgvMeteran_CellClick);
 
-                       dgvMeteran.Columns[6].DefaultCellStyle.SelectionBackColor = dgvMeteran.DefaultCellStyle.BackColor;
-                       dgvMeteran.Columns[6].DefaultCellStyle.SelectionForeColor = dgvMeteran.DefaultCellStyle.ForeColor;
+                dgvMeteran.Columns[6].DefaultCellStyle.SelectionBackColor = dgvMeteran.DefaultCellStyle.BackColor;
+                dgvMeteran.Columns[6].DefaultCellStyle.SelectionForeColor = dgvMeteran.DefaultCellStyle.ForeColor;
 
-                       for (int x = 0; x <= dgvMeteran.Rows.Count - 1; x++)
-                       {
-                           if (dgvMeteran.Rows[x].Cells[4].Value.ToString() == "1")
-                           {
-                               Image bayar = Properties.Resources.check;
-                               dgvMeteran.Rows[x].Cells["image"].Value = bayar;
+                for (int x = 0; x <= dgvMeteran.Rows.Count - 1; x++)
+                {
+                    if (dgvMeteran.Rows[x].Cells[4].Value.ToString() == "1")
+                    {
+                        Image bayar = Properties.Resources.check;
+                        dgvMeteran.Rows[x].Cells["image"].Value = bayar;
 
-                               Image printerIcon = Properties.Resources.printer;
-                               dgvMeteran.Rows[x].Cells["imagePrint"].Value = printerIcon;
-                           }
-                       }
-                       conn.Close();
-                   }
-            
+                        Image printerIcon = Properties.Resources.printer;
+                        dgvMeteran.Rows[x].Cells["imagePrint"].Value = printerIcon;
+                    }
+                }
+                conn.Close();
+            }
+
         }
 
         void dgvMeteran_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -412,7 +415,7 @@ namespace Artesis
                     int nextYear = 0;
                     while (reader.Read())
                     {
-                        CBTahun.Items.Add(reader.GetString(0));                        
+                        CBTahun.Items.Add(reader.GetString(0));
                         cbTahunTghn.Items.Add(reader.GetString(0));
                         nextYear = Int32.Parse(reader.GetValue(0).ToString()) + 1;
                     }
@@ -463,7 +466,7 @@ namespace Artesis
             cbBulanTghn.SelectedIndex = now.Month - 1;
         }
 
-        
+
         private void closePanel()
         {
             panelMember.Visible = false;
@@ -473,7 +476,7 @@ namespace Artesis
 
         private void btnCekMeteran_Click(object sender, EventArgs e)
         {
-            this.prepareMeteran();            
+            this.prepareMeteran();
         }
 
         private void dgvMeteran_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
@@ -503,12 +506,12 @@ namespace Artesis
         {
             using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
             {
-                conn.Open();                
+                conn.Open();
 
                 string member_id = dgvMeteran.CurrentRow.Cells["id"].Value.ToString();
                 int columnIdx = e.ColumnIndex;
-                double meteranVal = (double) dgvMeteran.CurrentRow.Cells[columnIdx].Value;
-                                
+                double meteranVal = (double)dgvMeteran.CurrentRow.Cells[columnIdx].Value;
+
                 String field = "awal";
 
                 if (columnIdx == 3)
@@ -521,7 +524,7 @@ namespace Artesis
                             return;
                         }
                     }
-                    
+
                     field = "akhir";
                 }
 
@@ -546,7 +549,7 @@ namespace Artesis
                         }
                     }
                 }
-                conn.Close();                
+                conn.Close();
             }
         }
 
@@ -574,7 +577,7 @@ namespace Artesis
 
                 String bulan = cbBulanTghn.SelectedValue.ToString();
                 String tahun = cbTahunTghn.SelectedItem.ToString();
-                tanggalTagihan =  tahun + "-" + bulan + "-01";
+                tanggalTagihan = tahun + "-" + bulan + "-01";
 
                 using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
                 {
@@ -651,9 +654,9 @@ namespace Artesis
                         MessageBox.Show("Data Meteran Belum Diinput");
                     }
 
-                    
+
                 }
-                
+
             }
         }
 
@@ -685,7 +688,7 @@ namespace Artesis
             DateTime jatuhTempo = new DateTime(Int32.Parse(tahun), Int32.Parse(bulan), 20);
 
             int denda = 0;
-            
+
             //MessageBox.Show(jatuhTempo.ToString() + " " + now.ToString());
 
             if (now > jatuhTempo)
@@ -699,7 +702,7 @@ namespace Artesis
         public double biayaPemakaian(double pemakaian)
         {
             double sisa;
-                        
+
             double biaya = 0;
 
             usage[1] = 0;
@@ -783,97 +786,97 @@ namespace Artesis
 
                 cmd = new SQLiteCommand("UPDATE meteran SET  bayar = 1, bayar_at = datetime('now') WHERE  member_id = " + memberTagihan + " AND bayar = 0 AND tanggal = '" + tanggalTagihan + "'", conn);
 
-                    //cmd.Connection.Open();                    
-                    int rowsAffected = cmd.ExecuteNonQuery();  //Deadlock in Here
+                //cmd.Connection.Open();                    
+                int rowsAffected = cmd.ExecuteNonQuery();  //Deadlock in Here
+                cmd.Dispose();
+
+                if (rowsAffected > 0)
+                {
+                    //Check Max Invoice
+
+                    DateTime now = DateTime.Now;
+                    String suffix = "/PAA-LMA/09/" + ToRoman(now.Month) + "/" + now.Year.ToString();
+
+                    string command2 = "SELECT max(no_invoice) as max_invoice FROM pembayaran WHERE invoice_suffix = '" + suffix + "'";
+
+                    int max_invoice = 1;
+
+                    using (SQLiteCommand cmd2 = new SQLiteCommand(command2, conn))
+                    {
+                        using (SQLiteDataReader reader2 = cmd2.ExecuteReader())
+                        {
+
+                            if (reader2.Read())
+                            {
+                                if (reader2["max_invoice"] != DBNull.Value)
+                                {
+                                    max_invoice = reader2.GetInt32(0) + 1;
+                                }
+                            }
+                        }
+
+                    }
+                    invoiceBayar = string.Format("{0:000}", max_invoice) + suffix;
+                    //End Check Max Invoice
+
+                    //Check ID
+                    int meteran_id = 0;
+
+                    string command3 = "SELECT id FROM meteran WHERE member_id = " + memberTagihan + " AND tanggal = '" + tanggalTagihan + "'";
+
+                    using (SQLiteCommand cmd3 = new SQLiteCommand(command3, conn))
+                    {
+                        using (SQLiteDataReader reader3 = cmd3.ExecuteReader())
+                        {
+                            if (reader3.Read())
+                            {
+                                meteran_id = reader3.GetInt32(0);
+                            }
+                        }
+
+                    }
+                    //End Check Max Invoice
+
+
+                    String savePayment = "INSERT INTO pembayaran(meteran_id, no_invoice, invoice_suffix, jumlah, tgl_bayar) VALUES  ";
+                    savePayment += "(" + meteran_id + ", " + max_invoice + ", '" + suffix + "', " + totalBayar + " , datetime('now'))";
+
+                    using (SQLiteCommand cmd4 = new SQLiteCommand(savePayment, conn))
+                    {
+                        cmd4.ExecuteNonQuery();
+                    }
+
+                    cmd = new SQLiteCommand("END", conn);
+                    cmd.ExecuteNonQuery();
                     cmd.Dispose();
 
-                    if (rowsAffected > 0)
+                    PrintDialog printDialog = new PrintDialog();
+
+                    PrintDocument printDoc = new PrintDocument();
+
+                    printDialog.Document = printDoc;
+
+                    printDoc.PrintPage += new PrintPageEventHandler(printDoc_PrintPage);
+
+                    DialogResult result = printDialog.ShowDialog();
+
+                    if (result == DialogResult.OK)
                     {
-                        //Check Max Invoice
+                        printDoc.Print();
 
-                        DateTime now = DateTime.Now;
-                        String suffix = "/PAA-LMA/09/" + ToRoman(now.Month) + "/" + now.Year.ToString();
+                        this.pembayaranTagihanToolStripMenuItem_Click(sender, e);
 
-                        string command2 = "SELECT max(no_invoice) as max_invoice FROM pembayaran WHERE invoice_suffix = '" + suffix + "'";
+                        MessageBox.Show("Data Pembayaran Telah Disimpan");
 
-                        int max_invoice = 1;
-
-                        using (SQLiteCommand cmd2 = new SQLiteCommand(command2, conn))
-                        {
-                            using (SQLiteDataReader reader2 = cmd2.ExecuteReader())
-                            {
-
-                                if (reader2.Read())
-                                {
-                                    if (reader2["max_invoice"] != DBNull.Value)
-                                    {
-                                        max_invoice = reader2.GetInt32(0) + 1;
-                                    }
-                                }
-                            }
-
-                        }
-                        invoiceBayar = string.Format("{0:000}", max_invoice) + suffix;
-                        //End Check Max Invoice
-
-                        //Check ID
-                        int meteran_id = 0;
-
-                        string command3 = "SELECT id FROM meteran WHERE member_id = " + memberTagihan + " AND tanggal = '" + tanggalTagihan + "'";
-
-                        using (SQLiteCommand cmd3 = new SQLiteCommand(command3, conn))
-                        {
-                            using (SQLiteDataReader reader3 = cmd3.ExecuteReader())
-                            {
-                                if (reader3.Read())
-                                {
-                                    meteran_id = reader3.GetInt32(0);
-                                }
-                            }
-
-                        }
-                        //End Check Max Invoice
-
-
-                        String savePayment = "INSERT INTO pembayaran(meteran_id, no_invoice, invoice_suffix, jumlah, tgl_bayar) VALUES  ";
-                        savePayment += "(" + meteran_id + ", " + max_invoice + ", '" + suffix + "', " + totalBayar + " , datetime('now'))";
-
-                        using (SQLiteCommand cmd4 = new SQLiteCommand(savePayment, conn))
-                        {
-                            cmd4.ExecuteNonQuery();
-                        }
-                        
-                        cmd = new SQLiteCommand("END", conn);
-                        cmd.ExecuteNonQuery();
-                        cmd.Dispose();
-
-                        PrintDialog printDialog = new PrintDialog();
-
-                        PrintDocument printDoc = new PrintDocument();
-
-                        printDialog.Document = printDoc;
-
-                        printDoc.PrintPage += new PrintPageEventHandler(printDoc_PrintPage);
-
-                        DialogResult result = printDialog.ShowDialog();
-
-                        if (result == DialogResult.OK)
-                        {
-                            printDoc.Print();
-
-                            this.pembayaranTagihanToolStripMenuItem_Click(sender, e);
-
-                            MessageBox.Show("Data Pembayaran Telah Disimpan");
-
-                        }
                     }
-                    else
-                    {
-                        MessageBox.Show("Error ! Data Pembayaran tidak disimpan");
-                    }
+                }
+                else
+                {
+                    MessageBox.Show("Error ! Data Pembayaran tidak disimpan");
+                }
                 //}  
 
-                
+
 
 
                 conn.Close();
@@ -885,12 +888,46 @@ namespace Artesis
 
         void printDoc_PrintPage(object sender, PrintPageEventArgs e)
         {
+            Int32 bebanTetap = 0;
+            Int32 denda = 0;
+            Int32 tarif1 = 0;
+            Int32 tarif2 = 0;
+            Int32 tarif3 = 0;
+            Int32 tarif4 = 0;
+            Int32 tarif5 = 0;
+
+            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
+            {
+                conn.Open();
+                string command = "SELECT * FROM tarif";
+                using (SQLiteCommand cmd = new SQLiteCommand(command, conn))
+                {
+                    using (SQLiteDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            bebanTetap = reader.GetInt32(0);
+                            denda = reader.GetInt32(1);
+                            tarif1 = reader.GetInt32(2);
+                            tarif2 = reader.GetInt32(3);
+                            tarif3 = reader.GetInt32(4);
+                            tarif4 = reader.GetInt32(5);
+                            tarif5 = reader.GetInt32(6);
+                        }
+                    }
+                }
+                conn.Close();
+            }
+
+
             Graphics graphic = e.Graphics;
 
             Font font = new Font("Arial", 12, GraphicsUnit.Pixel);
             Font fontUnderline = new Font("Arial", 16, FontStyle.Underline | FontStyle.Bold, GraphicsUnit.Pixel);
             Font fontHeader1 = new Font("Arial", 16, FontStyle.Bold, GraphicsUnit.Pixel);
             Font fontHeader2 = new Font("Arial", 14, FontStyle.Bold, GraphicsUnit.Pixel);
+            Font footerBold = new Font("Arial", 8, FontStyle.Bold, GraphicsUnit.Pixel);
+            Font footer = new Font("Arial", 8, GraphicsUnit.Pixel);
 
             float fontHeight = font.GetHeight();
 
@@ -899,13 +936,13 @@ namespace Artesis
             int offset = 20;
             int tab1 = 110;
             int tab2 = 150;
-            int tab3 = 500;
-            int tab4 = 650;
-            int tab5 = 670;
+            int tab3 = 480;
+            int tab4 = 630;
+            int tab5 = 650;
             int recWidth = 90;
             int recHeight = 20;
             int spacing = 30;
-                
+
             StringFormat stringFormat = new StringFormat();
             stringFormat.Alignment = StringAlignment.Far;
             stringFormat.LineAlignment = StringAlignment.Near;
@@ -917,11 +954,11 @@ namespace Artesis
             graphic.DrawString("PENGELOLA AIR ARTESIS PERUM LAKSANA MEKAR ASRI", fontHeader1, new SolidBrush(Color.Black), startX + 180, startY);
 
             graphic.DrawString("RW 09 Desa Laksana Mekar Kec. Padalarang Kab. Bandung Barat", fontHeader1, new SolidBrush(Color.Black), startX + 160, startY + offset);
-            offset += 50;
+            offset += 70;
 
             graphic.DrawString("KUITANSI PEMBAYARAN AIR BULAN " + periode, fontHeader2, new SolidBrush(Color.Black), startX + 220, startY + offset);
 
-            offset += 60;
+            offset += 100;
 
             //Logo
             /*
@@ -1005,12 +1042,53 @@ namespace Artesis
             graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
             graphic.DrawString(totalBayar.ToString("N0"), fontUnderline, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
 
+            offset += 60;
+
+            //Footer
+            int tabFooter1 = 80;
+            int tabFooter2 = 110;
+            int tabFooter3 = 230;
+            int tabFooter4 = 310;
+            int tabFooter5 = 340;
+
+            graphic.DrawString("Daftar Tarif : ", footerBold, new SolidBrush(Color.Black), startX, startY + offset);
+            offset += spacing;
+
+            graphic.DrawString("Beban Tetap", footer, new SolidBrush(Color.Black), startX, startY + offset);
+            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter1, startY + offset);
+            graphic.DrawString(bebanTetap.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter2, startY + offset);
+
+            graphic.DrawString("16-20 m3", footer, new SolidBrush(Color.Black), startX + tabFooter3, startY + offset);
+            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter4, startY + offset);
+            graphic.DrawString(tarif3.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter5, startY + offset);
+
+            offset += spacing;
+
+            graphic.DrawString("0 - 10 m3", footer, new SolidBrush(Color.Black), startX, startY + offset);
+            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter1, startY + offset);
+            graphic.DrawString(tarif1.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter2, startY + offset);
+
+            graphic.DrawString("21-25 m3", footer, new SolidBrush(Color.Black), startX + tabFooter3, startY + offset);
+            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter4, startY + offset);
+            graphic.DrawString(tarif4.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter5, startY + offset);
+
+            offset += spacing;
+
+            graphic.DrawString("11 - 15 m3", footer, new SolidBrush(Color.Black), startX, startY + offset);
+            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter1, startY + offset);
+            graphic.DrawString(tarif2.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter2, startY + offset);
+
+            graphic.DrawString("> 25 m3", footer, new SolidBrush(Color.Black), startX + tabFooter3, startY + offset);
+            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter4, startY + offset);
+            graphic.DrawString(tarif5.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter5, startY + offset);
+
+            /*
             offset += 40;
 
             Pen blackPen = new Pen(Color.Black, 1);
             blackPen.DashStyle = DashStyle.Dot;
 
-            graphic.DrawLine(blackPen, 0, startY + offset, ClientSize.Width, startY + offset);
+            graphic.DrawLine(blackPen, 0, startY + offset, ClientSize.Width, startY + offset);*/
         }
 
         private void tentangToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1018,7 +1096,7 @@ namespace Artesis
             //DialogResult dr = new DialogResult();
 
             About about = new About();
-            
+
             about.ShowDialog();
 
         }
@@ -1028,7 +1106,7 @@ namespace Artesis
             DialogResult dr = new DialogResult();
 
             ubahPasswordFrm ubahPasswordDialog = new ubahPasswordFrm();
-            
+
             //FrmAnggota addMemberDialog = new FrmAnggota();
             //addMemberDialog.isUpdate.Text = "0";
 
@@ -1073,7 +1151,7 @@ namespace Artesis
                             biayaBeban[11] = reader.GetInt32(3);
                             biayaBeban[16] = reader.GetInt32(4);
                             biayaBeban[21] = reader.GetInt32(5);
-                            biayaBeban[25] = reader.GetInt32(6);                           
+                            biayaBeban[25] = reader.GetInt32(6);
                         }
                     }
                 }
@@ -1118,7 +1196,7 @@ namespace Artesis
                             return 0;
                         }
                     }
-                }                
+                }
             }
         }
 
@@ -1181,6 +1259,68 @@ namespace Artesis
             if (dr == DialogResult.OK)
             {
                 //this.prepareTarif();
+            }
+        }
+
+        private void tesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog1 = new OpenFileDialog();
+
+            openFileDialog1.Filter = "Excel Files (.xls, .xlsx)|*.xls;*.xlsx";
+            openFileDialog1.FilterIndex = 1;
+
+
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                String filename = openFileDialog1.FileName;
+                
+                Excel.Application oXL = new Excel.Application();
+                object misValue = System.Reflection.Missing.Value;
+
+
+                oXL.DisplayAlerts = false;
+
+                Excel.Workbook oWB = oXL.Workbooks.Open(filename);
+                Excel.Worksheet oSheet = oWB.Worksheets.get_Item(1);
+                                
+                Excel.Range last = oSheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
+
+                int lastRow = last.Row;
+
+                //int lastColumn = last.Column;
+
+                
+
+                using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
+                {
+                    conn.Open();
+
+                    for (int i = 2; i <= lastRow; i++)
+                    {
+                        System.Array data = (System.Array)oSheet.get_Range("A" + i.ToString(), "E" + i.ToString()).Cells.Value;
+
+                        FrmAnggota frmAnggota = new FrmAnggota();
+                        int urut_rt = frmAnggota.maxUrutRT(data.GetValue(1,5).ToString()) + 1;
+
+                        String insertCmd = "INSERT INTO members(urut_rt, nama, telp, blok, no_rumah, rt, active, created_at) ";
+                        insertCmd += "VALUES (" + urut_rt + ", '" + data.GetValue(1,1).ToString() + "', '" + data.GetValue(1,2).ToString() + "', '" + data.GetValue(1,3).ToString() + "',";
+                        insertCmd += "'" + data.GetValue(1,4).ToString() + "', '" + data.GetValue(1,5).ToString() + "', 1, datetime('now'))";
+
+                        Console.WriteLine(insertCmd);
+
+                        using (SQLiteCommand cmd = new SQLiteCommand(insertCmd, conn))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    conn.Close();
+                }
+
+                MessageBox.Show("Data Anggota telah Ditambahkan");
+
+                oWB.Close(true, misValue, misValue);
+                oXL.Quit();
             }
         }
     }

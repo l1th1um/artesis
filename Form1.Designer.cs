@@ -43,6 +43,7 @@
             this.tahunanToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tentangToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelTagihan = new System.Windows.Forms.Panel();
             this.gbTagihan = new System.Windows.Forms.GroupBox();
             this.label37 = new System.Windows.Forms.Label();
@@ -112,6 +113,7 @@
             this.btnDeleteMember = new System.Windows.Forms.Button();
             this.btnAddMember = new System.Windows.Forms.Button();
             this.dataGridViewMember = new System.Windows.Forms.DataGridView();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.menuStrip1.SuspendLayout();
             this.panelTagihan.SuspendLayout();
             this.gbTagihan.SuspendLayout();
@@ -137,10 +139,11 @@
             this.menuStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.tentangToolStripMenuItem});
+            this.tentangToolStripMenuItem,
+            this.tesToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(108, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(237, 24);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -238,6 +241,13 @@
             this.tentangToolStripMenuItem.Size = new System.Drawing.Size(63, 20);
             this.tentangToolStripMenuItem.Text = "Tentang";
             this.tentangToolStripMenuItem.Click += new System.EventHandler(this.tentangToolStripMenuItem_Click);
+            // 
+            // tesToolStripMenuItem
+            // 
+            this.tesToolStripMenuItem.Name = "tesToolStripMenuItem";
+            this.tesToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.tesToolStripMenuItem.Text = "Tes";
+            this.tesToolStripMenuItem.Click += new System.EventHandler(this.tesToolStripMenuItem_Click);
             // 
             // panelTagihan
             // 
@@ -1026,6 +1036,10 @@
             this.dataGridViewMember.TabIndex = 0;
             this.dataGridViewMember.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewMember_CellDoubleClick);
             // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.FileName = "openFileDialog1";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1145,6 +1159,8 @@
         private System.Windows.Forms.ToolStripMenuItem bulananToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem tahunanToolStripMenuItem;
         private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.ToolStripMenuItem tesToolStripMenuItem;
+        private System.Windows.Forms.OpenFileDialog openFileDialog1;
     }
 }
 
