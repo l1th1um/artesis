@@ -43,7 +43,6 @@
             this.tahunanToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tentangToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.tesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelTagihan = new System.Windows.Forms.Panel();
             this.gbTagihan = new System.Windows.Forms.GroupBox();
             this.label37 = new System.Windows.Forms.Label();
@@ -100,6 +99,12 @@
             this.cbAnggota = new System.Windows.Forms.ComboBox();
             this.Pelanggan = new System.Windows.Forms.Label();
             this.panelContainer = new System.Windows.Forms.Panel();
+            this.panelMember = new System.Windows.Forms.Panel();
+            this.btnImport = new System.Windows.Forms.Button();
+            this.label18 = new System.Windows.Forms.Label();
+            this.btnDeleteMember = new System.Windows.Forms.Button();
+            this.btnAddMember = new System.Windows.Forms.Button();
+            this.dataGridViewMember = new System.Windows.Forms.DataGridView();
             this.panelMeteranBulanan = new System.Windows.Forms.Panel();
             this.tglTxt = new System.Windows.Forms.Label();
             this.pnlHeaderMeteran = new System.Windows.Forms.Panel();
@@ -108,22 +113,18 @@
             this.cbBulan = new System.Windows.Forms.ComboBox();
             this.CBTahun = new System.Windows.Forms.ComboBox();
             this.btnCekMeteran = new System.Windows.Forms.Button();
-            this.panelMember = new System.Windows.Forms.Panel();
-            this.label18 = new System.Windows.Forms.Label();
-            this.btnDeleteMember = new System.Windows.Forms.Button();
-            this.btnAddMember = new System.Windows.Forms.Button();
-            this.dataGridViewMember = new System.Windows.Forms.DataGridView();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.exportBtn = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.panelTagihan.SuspendLayout();
             this.gbTagihan.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.panelContainer.SuspendLayout();
+            this.panelMember.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewMember)).BeginInit();
             this.panelMeteranBulanan.SuspendLayout();
             this.pnlHeaderMeteran.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMeteran)).BeginInit();
-            this.panelMember.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewMember)).BeginInit();
             this.SuspendLayout();
             // 
             // statusStrip1
@@ -139,11 +140,10 @@
             this.menuStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.tentangToolStripMenuItem,
-            this.tesToolStripMenuItem});
+            this.tentangToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(237, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(108, 24);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -241,13 +241,6 @@
             this.tentangToolStripMenuItem.Size = new System.Drawing.Size(63, 20);
             this.tentangToolStripMenuItem.Text = "Tentang";
             this.tentangToolStripMenuItem.Click += new System.EventHandler(this.tentangToolStripMenuItem_Click);
-            // 
-            // tesToolStripMenuItem
-            // 
-            this.tesToolStripMenuItem.Name = "tesToolStripMenuItem";
-            this.tesToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.tesToolStripMenuItem.Text = "Tes";
-            this.tesToolStripMenuItem.Click += new System.EventHandler(this.tesToolStripMenuItem_Click);
             // 
             // panelTagihan
             // 
@@ -857,13 +850,99 @@
             this.panelContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelContainer.Controls.Add(this.panelMember);
             this.panelContainer.Controls.Add(this.panelTagihan);
             this.panelContainer.Controls.Add(this.panelMeteranBulanan);
-            this.panelContainer.Controls.Add(this.panelMember);
             this.panelContainer.Location = new System.Drawing.Point(12, 27);
             this.panelContainer.Name = "panelContainer";
             this.panelContainer.Size = new System.Drawing.Size(984, 481);
             this.panelContainer.TabIndex = 7;
+            // 
+            // panelMember
+            // 
+            this.panelMember.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelMember.Controls.Add(this.exportBtn);
+            this.panelMember.Controls.Add(this.btnImport);
+            this.panelMember.Controls.Add(this.label18);
+            this.panelMember.Controls.Add(this.btnDeleteMember);
+            this.panelMember.Controls.Add(this.btnAddMember);
+            this.panelMember.Controls.Add(this.dataGridViewMember);
+            this.panelMember.Location = new System.Drawing.Point(0, 0);
+            this.panelMember.Name = "panelMember";
+            this.panelMember.Size = new System.Drawing.Size(984, 533);
+            this.panelMember.TabIndex = 7;
+            // 
+            // btnImport
+            // 
+            this.btnImport.Image = global::Artesis.Properties.Resources.import;
+            this.btnImport.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnImport.Location = new System.Drawing.Point(19, 8);
+            this.btnImport.Name = "btnImport";
+            this.btnImport.Size = new System.Drawing.Size(96, 43);
+            this.btnImport.TabIndex = 5;
+            this.btnImport.Text = "&Import Data";
+            this.btnImport.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnImport.UseVisualStyleBackColor = true;
+            this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label18.Location = new System.Drawing.Point(16, 56);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(220, 13);
+            this.label18.TabIndex = 4;
+            this.label18.Text = "Klik Kolom Paling Kiri untuk Menghapus Data";
+            // 
+            // btnDeleteMember
+            // 
+            this.btnDeleteMember.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnDeleteMember.Image = ((System.Drawing.Image)(resources.GetObject("btnDeleteMember.Image")));
+            this.btnDeleteMember.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnDeleteMember.Location = new System.Drawing.Point(872, 8);
+            this.btnDeleteMember.Name = "btnDeleteMember";
+            this.btnDeleteMember.Size = new System.Drawing.Size(103, 43);
+            this.btnDeleteMember.TabIndex = 3;
+            this.btnDeleteMember.Text = "&Hapus Anggota";
+            this.btnDeleteMember.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnDeleteMember.UseVisualStyleBackColor = true;
+            this.btnDeleteMember.Click += new System.EventHandler(this.button2_Click);
+            // 
+            // btnAddMember
+            // 
+            this.btnAddMember.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAddMember.Image = ((System.Drawing.Image)(resources.GetObject("btnAddMember.Image")));
+            this.btnAddMember.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnAddMember.Location = new System.Drawing.Point(748, 8);
+            this.btnAddMember.Name = "btnAddMember";
+            this.btnAddMember.Size = new System.Drawing.Size(118, 43);
+            this.btnAddMember.TabIndex = 2;
+            this.btnAddMember.Text = "&Tambah Anggota";
+            this.btnAddMember.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnAddMember.UseVisualStyleBackColor = true;
+            this.btnAddMember.Click += new System.EventHandler(this.btnAddMember_Click);
+            // 
+            // dataGridViewMember
+            // 
+            this.dataGridViewMember.AccessibleRole = System.Windows.Forms.AccessibleRole.MenuBar;
+            this.dataGridViewMember.AllowUserToAddRows = false;
+            this.dataGridViewMember.AllowUserToResizeColumns = false;
+            this.dataGridViewMember.AllowUserToResizeRows = false;
+            this.dataGridViewMember.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridViewMember.BackgroundColor = System.Drawing.SystemColors.Control;
+            this.dataGridViewMember.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dataGridViewMember.ColumnHeadersHeight = 30;
+            this.dataGridViewMember.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            this.dataGridViewMember.Location = new System.Drawing.Point(3, 73);
+            this.dataGridViewMember.Name = "dataGridViewMember";
+            this.dataGridViewMember.Size = new System.Drawing.Size(981, 454);
+            this.dataGridViewMember.TabIndex = 0;
+            this.dataGridViewMember.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewMember_CellDoubleClick);
             // 
             // panelMeteranBulanan
             // 
@@ -930,6 +1009,7 @@
             this.dgvMeteran.Name = "dgvMeteran";
             this.dgvMeteran.Size = new System.Drawing.Size(984, 408);
             this.dgvMeteran.TabIndex = 4;
+            this.dgvMeteran.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvMeteran_CellContentClick);
             this.dgvMeteran.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvMeteran_CellEndEdit);
             this.dgvMeteran.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dgvMeteran_EditingControlShowing);
             // 
@@ -965,80 +1045,22 @@
             this.btnCekMeteran.UseVisualStyleBackColor = false;
             this.btnCekMeteran.Click += new System.EventHandler(this.btnCekMeteran_Click);
             // 
-            // panelMember
-            // 
-            this.panelMember.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.panelMember.Controls.Add(this.label18);
-            this.panelMember.Controls.Add(this.btnDeleteMember);
-            this.panelMember.Controls.Add(this.btnAddMember);
-            this.panelMember.Controls.Add(this.dataGridViewMember);
-            this.panelMember.Location = new System.Drawing.Point(0, 0);
-            this.panelMember.Name = "panelMember";
-            this.panelMember.Size = new System.Drawing.Size(984, 533);
-            this.panelMember.TabIndex = 7;
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label18.Location = new System.Drawing.Point(4, 46);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(220, 13);
-            this.label18.TabIndex = 4;
-            this.label18.Text = "Klik Kolom Paling Kiri untuk Menghapus Data";
-            // 
-            // btnDeleteMember
-            // 
-            this.btnDeleteMember.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDeleteMember.Image = ((System.Drawing.Image)(resources.GetObject("btnDeleteMember.Image")));
-            this.btnDeleteMember.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnDeleteMember.Location = new System.Drawing.Point(872, 8);
-            this.btnDeleteMember.Name = "btnDeleteMember";
-            this.btnDeleteMember.Size = new System.Drawing.Size(103, 43);
-            this.btnDeleteMember.TabIndex = 3;
-            this.btnDeleteMember.Text = "&Hapus Anggota";
-            this.btnDeleteMember.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnDeleteMember.UseVisualStyleBackColor = true;
-            this.btnDeleteMember.Click += new System.EventHandler(this.button2_Click);
-            // 
-            // btnAddMember
-            // 
-            this.btnAddMember.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAddMember.Image = ((System.Drawing.Image)(resources.GetObject("btnAddMember.Image")));
-            this.btnAddMember.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnAddMember.Location = new System.Drawing.Point(748, 8);
-            this.btnAddMember.Name = "btnAddMember";
-            this.btnAddMember.Size = new System.Drawing.Size(118, 43);
-            this.btnAddMember.TabIndex = 2;
-            this.btnAddMember.Text = "&Tambah Anggota";
-            this.btnAddMember.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnAddMember.UseVisualStyleBackColor = true;
-            this.btnAddMember.Click += new System.EventHandler(this.btnAddMember_Click);
-            // 
-            // dataGridViewMember
-            // 
-            this.dataGridViewMember.AccessibleRole = System.Windows.Forms.AccessibleRole.MenuBar;
-            this.dataGridViewMember.AllowUserToAddRows = false;
-            this.dataGridViewMember.AllowUserToResizeColumns = false;
-            this.dataGridViewMember.AllowUserToResizeRows = false;
-            this.dataGridViewMember.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridViewMember.BackgroundColor = System.Drawing.SystemColors.Control;
-            this.dataGridViewMember.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridViewMember.ColumnHeadersHeight = 30;
-            this.dataGridViewMember.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.dataGridViewMember.Location = new System.Drawing.Point(3, 73);
-            this.dataGridViewMember.Name = "dataGridViewMember";
-            this.dataGridViewMember.Size = new System.Drawing.Size(981, 454);
-            this.dataGridViewMember.TabIndex = 0;
-            this.dataGridViewMember.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewMember_CellDoubleClick);
-            // 
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
+            // 
+            // exportBtn
+            // 
+            this.exportBtn.Image = global::Artesis.Properties.Resources.export;
+            this.exportBtn.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.exportBtn.Location = new System.Drawing.Point(157, 10);
+            this.exportBtn.Name = "exportBtn";
+            this.exportBtn.Size = new System.Drawing.Size(96, 43);
+            this.exportBtn.TabIndex = 6;
+            this.exportBtn.Text = "&Export Data";
+            this.exportBtn.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.exportBtn.UseVisualStyleBackColor = true;
+            this.exportBtn.Click += new System.EventHandler(this.exportBtn_Click);
             // 
             // Form1
             // 
@@ -1062,13 +1084,13 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.panelContainer.ResumeLayout(false);
+            this.panelMember.ResumeLayout(false);
+            this.panelMember.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewMember)).EndInit();
             this.panelMeteranBulanan.ResumeLayout(false);
             this.panelMeteranBulanan.PerformLayout();
             this.pnlHeaderMeteran.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvMeteran)).EndInit();
-            this.panelMember.ResumeLayout(false);
-            this.panelMember.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewMember)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1159,8 +1181,9 @@
         private System.Windows.Forms.ToolStripMenuItem bulananToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem tahunanToolStripMenuItem;
         private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.ToolStripMenuItem tesToolStripMenuItem;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.Button btnImport;
+        private System.Windows.Forms.Button exportBtn;
     }
 }
 

@@ -63,6 +63,7 @@
             this.CBTahun.Name = "CBTahun";
             this.CBTahun.Size = new System.Drawing.Size(80, 21);
             this.CBTahun.TabIndex = 1;
+            this.CBTahun.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.CBTahun_KeyPress);
             // 
             // cbBulan
             // 
@@ -71,6 +72,7 @@
             this.cbBulan.Name = "cbBulan";
             this.cbBulan.Size = new System.Drawing.Size(147, 21);
             this.cbBulan.TabIndex = 0;
+            this.cbBulan.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cbBulan_KeyPress);
             // 
             // reportBulanan
             // 

@@ -315,15 +315,16 @@ namespace Artesis
                    query += " LEFT JOIN meteran t ON m.id = t.member_id AND t.tanggal = '"+ tanggal + "'";
                    query += " WHERE m.active = 1";*/
 
-            String query = "SELECT m.id, m.nama, ";
+            String query = "SELECT m.id, (substr('00'||urut_rt, -2, 2) || '.' || rt) as no_urut, m.nama, (rt || '/09') as rtrw, ";
+            query += " ('Blok ' || blok || ' No. ' || no_rumah) as alamat, ";
             query += " ifnull(t.awal, (SELECT ifnull(akhir, 0) FROM members m2 ";
             query += " LEFT JOIN meteran t2 ON m2.id = t2.member_id AND t2.tanggal = '" + blnSebelum + "'";
             query += " where m2.id = m.id)) as awal,   t.akhir, bayar ";
             query += " FROM members m ";
             query += " LEFT JOIN meteran t ON m.id = t.member_id AND t.tanggal = '" + tanggal + "'";
-            query += " WHERE m.active = 1";
+            query += " WHERE m.active = 1 ORDER BY rt, urut_rt";
 
-            System.Diagnostics.Debug.WriteLine(query);
+            //System.Diagnostics.Debug.WriteLine(query);
 
             using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
             {
@@ -334,29 +335,33 @@ namespace Artesis
                 sda.Fill(ds, "Meteran_List");
 
                 dgvMeteran.DataSource = ds.Tables[0];
+                
+                dgvMeteran.Columns[0].HeaderText = "id";
+                dgvMeteran.Columns[1].HeaderText = "No Pelanggan";
+                dgvMeteran.Columns[2].HeaderText = "Nama";
+                dgvMeteran.Columns[3].HeaderText = "RT";
+                dgvMeteran.Columns[4].HeaderText = "Alamat";
+                dgvMeteran.Columns[5].HeaderText = "Awal";
+                dgvMeteran.Columns[6].HeaderText = "Akhir";
+                dgvMeteran.Columns[7].HeaderText = "Bayar";
 
-                //dgvMeteran.DefaultCellStyle.SelectionBackColor = dgvMeteran.DefaultCellStyle.BackColor;
-                //dgvMeteran.DefaultCellStyle.SelectionForeColor = dgvMeteran.DefaultCellStyle.ForeColor;
-
-                dgvMeteran.Columns[0].HeaderText = "ID Anggota";
-                dgvMeteran.Columns[1].HeaderText = "Nama";
-                dgvMeteran.Columns[2].HeaderText = "Awal";
-                dgvMeteran.Columns[3].HeaderText = "Akhir";
-                dgvMeteran.Columns[4].HeaderText = "Bayar";
-                //dgvMeteran.Columns[5].HeaderText = "Print";
-
-
-                dgvMeteran.Columns[4].Visible = false;
-                //dgvMeteran.Columns[5].Visible = false;
-
-                dgvMeteran.Columns[0].Width = 100;
-                dgvMeteran.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                dgvMeteran.Columns[0].Visible = false;
+                dgvMeteran.Columns[7].Visible = false;
+                
                 dgvMeteran.Columns[2].Width = 100;
+                dgvMeteran.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
                 dgvMeteran.Columns[3].Width = 100;
+                dgvMeteran.Columns[4].Width = 200;
+                dgvMeteran.Columns[5].Width = 100;
+                dgvMeteran.Columns[6].Width = 100;
+
+                dgvMeteran.Columns[3].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                dgvMeteran.Columns[5].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                dgvMeteran.Columns[6].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
 
                 dgvMeteran.ReadOnly = false;
-                dgvMeteran.Columns[0].ReadOnly = true;
                 dgvMeteran.Columns[1].ReadOnly = true;
+                dgvMeteran.Columns[2].ReadOnly = true;
 
                 DataGridViewImageColumn imageCol = new DataGridViewImageColumn();
                 imageCol.HeaderText = "Bayar";
@@ -370,34 +375,44 @@ namespace Artesis
                 imagePrint.Name = "imagePrint";
                 imagePrint.Image = Properties.Resources.no_image;
                 dgvMeteran.Columns.Add(imagePrint);
-                dgvMeteran.CellClick += new DataGridViewCellEventHandler(dgvMeteran_CellClick);
+                
+                //View Column Print
+                DataGridViewImageColumn imageView = new DataGridViewImageColumn();
+                imageView.HeaderText = "";
+                imageView.Name = "imageView";
+                imageView.Image = Properties.Resources.no_image;
+                dgvMeteran.Columns.Add(imageView);
+                
 
-                dgvMeteran.Columns[6].DefaultCellStyle.SelectionBackColor = dgvMeteran.DefaultCellStyle.BackColor;
-                dgvMeteran.Columns[6].DefaultCellStyle.SelectionForeColor = dgvMeteran.DefaultCellStyle.ForeColor;
+                dgvMeteran.Columns[9].DefaultCellStyle.SelectionBackColor = dgvMeteran.DefaultCellStyle.BackColor;
+                dgvMeteran.Columns[9].DefaultCellStyle.SelectionForeColor = dgvMeteran.DefaultCellStyle.ForeColor;
 
                 for (int x = 0; x <= dgvMeteran.Rows.Count - 1; x++)
                 {
-                    if (dgvMeteran.Rows[x].Cells[4].Value.ToString() == "1")
+                    if (dgvMeteran.Rows[x].Cells[7].Value.ToString() == "1")
                     {
                         Image bayar = Properties.Resources.check;
                         dgvMeteran.Rows[x].Cells["image"].Value = bayar;
 
                         Image printerIcon = Properties.Resources.printer;
                         dgvMeteran.Rows[x].Cells["imagePrint"].Value = printerIcon;
+
+                        Image viewIcon = Properties.Resources.view;
+                        dgvMeteran.Rows[x].Cells["imageView"].Value = viewIcon;
                     }
                 }
+
+                foreach (DataGridViewColumn col in dgvMeteran.Columns)
+                {
+                    col.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    col.HeaderCell.Style.Font = new Font("Arial", 12F, FontStyle.Bold, GraphicsUnit.Pixel);
+                }
+
                 conn.Close();
             }
 
         }
 
-        void dgvMeteran_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex == 6)
-            {
-                MessageBox.Show("Print Kakak");
-            }
-        }
 
         private void getYear()
         {
@@ -838,8 +853,8 @@ namespace Artesis
                     //End Check Max Invoice
 
 
-                    String savePayment = "INSERT INTO pembayaran(meteran_id, no_invoice, invoice_suffix, jumlah, tgl_bayar) VALUES  ";
-                    savePayment += "(" + meteran_id + ", " + max_invoice + ", '" + suffix + "', " + totalBayar + " , datetime('now'))";
+                    String savePayment = "INSERT INTO pembayaran(meteran_id, no_invoice, invoice_suffix, jumlah, tgl_bayar, beban, denda, biaya_pemakaian) VALUES  ";
+                    savePayment += "(" + meteran_id + ", " + max_invoice + ", '" + suffix + "', " + totalBayar + " , datetime('now'), " + bebanTetap  + "," + dendaBayar + ", " + bebanBayar +")";
 
                     using (SQLiteCommand cmd4 = new SQLiteCommand(savePayment, conn))
                     {
@@ -1081,14 +1096,7 @@ namespace Artesis
             graphic.DrawString("> 25 m3", footer, new SolidBrush(Color.Black), startX + tabFooter3, startY + offset);
             graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter4, startY + offset);
             graphic.DrawString(tarif5.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter5, startY + offset);
-
-            /*
-            offset += 40;
-
-            Pen blackPen = new Pen(Color.Black, 1);
-            blackPen.DashStyle = DashStyle.Dot;
-
-            graphic.DrawLine(blackPen, 0, startY + offset, ClientSize.Width, startY + offset);*/
+            
         }
 
         private void tentangToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1262,7 +1270,7 @@ namespace Artesis
             }
         }
 
-        private void tesToolStripMenuItem_Click(object sender, EventArgs e)
+        private void btnImport_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
 
@@ -1273,7 +1281,7 @@ namespace Artesis
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 String filename = openFileDialog1.FileName;
-                
+
                 Excel.Application oXL = new Excel.Application();
                 object misValue = System.Reflection.Missing.Value;
 
@@ -1282,14 +1290,14 @@ namespace Artesis
 
                 Excel.Workbook oWB = oXL.Workbooks.Open(filename);
                 Excel.Worksheet oSheet = oWB.Worksheets.get_Item(1);
-                                
+
                 Excel.Range last = oSheet.Cells.SpecialCells(Excel.XlCellType.xlCellTypeLastCell, Type.Missing);
 
                 int lastRow = last.Row;
 
                 //int lastColumn = last.Column;
 
-                
+
 
                 using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
                 {
@@ -1299,19 +1307,23 @@ namespace Artesis
                     {
                         System.Array data = (System.Array)oSheet.get_Range("A" + i.ToString(), "E" + i.ToString()).Cells.Value;
 
-                        FrmAnggota frmAnggota = new FrmAnggota();
-                        int urut_rt = frmAnggota.maxUrutRT(data.GetValue(1,5).ToString()) + 1;
-
-                        String insertCmd = "INSERT INTO members(urut_rt, nama, telp, blok, no_rumah, rt, active, created_at) ";
-                        insertCmd += "VALUES (" + urut_rt + ", '" + data.GetValue(1,1).ToString() + "', '" + data.GetValue(1,2).ToString() + "', '" + data.GetValue(1,3).ToString() + "',";
-                        insertCmd += "'" + data.GetValue(1,4).ToString() + "', '" + data.GetValue(1,5).ToString() + "', 1, datetime('now'))";
-
-                        Console.WriteLine(insertCmd);
-
-                        using (SQLiteCommand cmd = new SQLiteCommand(insertCmd, conn))
+                        if (data.GetValue(1, 1) != null && data.GetValue(1, 2) != null && data.GetValue(1, 3) != null && data.GetValue(1, 4) != null && data.GetValue(1, 5) != null)
                         {
-                            cmd.ExecuteNonQuery();
+                            FrmAnggota frmAnggota = new FrmAnggota();
+                            int urut_rt = frmAnggota.maxUrutRT(data.GetValue(1, 5).ToString()) + 1;
+
+                            String insertCmd = "INSERT INTO members(urut_rt, nama, telp, blok, no_rumah, rt, active, created_at) ";
+                            insertCmd += "VALUES (" + urut_rt + ", '" + data.GetValue(1, 1).ToString() + "', '" + data.GetValue(1, 2).ToString() + "', '" + data.GetValue(1, 3).ToString() + "',";
+                            insertCmd += "'" + data.GetValue(1, 4).ToString() + "', '" + data.GetValue(1, 5).ToString() + "', 1, datetime('now'))";
+
+                            Console.WriteLine(insertCmd);
+
+                            using (SQLiteCommand cmd = new SQLiteCommand(insertCmd, conn))
+                            {
+                                cmd.ExecuteNonQuery();
+                            }
                         }
+                        
                     }
 
                     conn.Close();
@@ -1319,9 +1331,213 @@ namespace Artesis
 
                 MessageBox.Show("Data Anggota telah Ditambahkan");
 
-                oWB.Close(true, misValue, misValue);
+                oWB.Close();
+                    
                 oXL.Quit();
             }
+
+            this.loadMember();
+
         }
+
+        private void dgvMeteran_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            //Disini
+            string member_id = dgvMeteran.CurrentRow.Cells["id"].Value.ToString();
+            string tanggal = CBTahun.SelectedItem + "-" + cbBulan.SelectedValue + "-01";
+
+            if (e.ColumnIndex == 9)
+            {
+                MessageBox.Show("Print Kakak");
+            }
+            else if (e.ColumnIndex == 10)
+            {
+                //MessageBox.Show("View Kakak - " + member_id + " - " + bulan + " - " + tahun);
+                viewBayarFrm viewFrm = new viewBayarFrm();
+
+                String command = "SELECT * FROM members u ";
+                command += "LEFT JOIN meteran m ON u.id = m.member_id AND tanggal = '" + tanggal + "' ";
+                command += "LEFT JOIN pembayaran p ON p.meteran_id = m.id ";
+                command += "WHERE u.id = '" + member_id + "'";
+
+
+                using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
+                {
+                    conn.Open();
+                    
+                    SQLiteCommand query = new SQLiteCommand(command, conn);
+
+                    using (SQLiteDataReader reader = query.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            DateTime tgl_bayar = reader.GetDateTime(24);
+                            
+                            viewFrm.kuitansiTxt.Text = string.Format("{0:000}", reader["no_invoice"]) + reader["invoice_suffix"].ToString();
+                            viewFrm.namaTxt.Text = reader["nama"].ToString();
+                            viewFrm.tanggalTxt.Text = String.Format(new System.Globalization.CultureInfo("id-ID"), "{0:dd MMMM yyyy}", tgl_bayar);
+                            viewFrm.urutTxt.Text = string.Format("{0:00}", reader["urut_rt"]) + "/" + reader["rt"].ToString();
+                            viewFrm.alamatTxt.Text = "Blok " + reader["blok"].ToString() + " No. " + reader["no_rumah"].ToString();
+
+                            viewFrm.awalTxt.Text = string.Format("{0:N}", reader["awal"]);
+                            viewFrm.akhirTxt.Text = string.Format("{0:N}", reader["akhir"]);
+
+                            double pemakaian = reader.GetDouble(14) - reader.GetDouble(13);
+
+                            viewFrm.pemakaianTxt.Text = string.Format("{0:N}", pemakaian);
+
+                            viewFrm.bebanTxt.Text = string.Format("{0:N}", reader.GetDouble(25) );
+                            viewFrm.dendaTxt.Text = string.Format("{0:N}", reader.GetDouble(26));
+                            viewFrm.subtotalTxt.Text = string.Format("{0:N}", reader.GetDouble(27));
+
+                            viewFrm.totalTxt.Text = string.Format("{0:N}", reader.GetDouble(23));
+
+                            double biayaPemakaian = this.biayaPemakaian(pemakaian);
+
+                            viewFrm.totalSumLbl.Text = string.Format("{0:N}", reader.GetDouble(27));
+
+                            viewFrm.tarif1Lbl.Text = usage[1].ToString("N") + " x " + biayaBeban[1].ToString("N0");
+                            viewFrm.tarif11Lbl.Text = usage[11].ToString("N") + " x " + biayaBeban[11].ToString("N0");
+                            viewFrm.tarif16Lbl.Text = usage[16].ToString("N") + " x " + biayaBeban[16].ToString("N0");
+                            viewFrm.tarif21Lbl.Text = usage[21].ToString("N") + " x " + biayaBeban[21].ToString("N0");
+                            viewFrm.tarif25Lbl.Text = usage[25].ToString("N") + " x " + biayaBeban[25].ToString("N0");
+
+                            viewFrm.sum1Lbl.Text = (usage[1] * biayaBeban[1]).ToString("N0");
+                            viewFrm.sum11Lbl.Text = (usage[11] * biayaBeban[11]).ToString("N0");
+                            viewFrm.sum16Lbl.Text = (usage[16] * biayaBeban[16]).ToString("N0");
+                            viewFrm.sum21Lbl.Text = (usage[21] * biayaBeban[21]).ToString("N0");
+                            viewFrm.sum25Lbl.Text = (usage[25] * biayaBeban[25]).ToString("N0");                            
+                        }
+                    }
+                }
+
+                viewFrm.ShowDialog();                
+            }
+        }
+
+        private void exportBtn_Click(object sender, EventArgs e)
+        {
+            //Buat Export Data Pelanggan
+            SaveFileDialog sfd = new SaveFileDialog();
+
+            sfd.FileName = "Data Pelanggan.xls";
+            sfd.Filter = "Excel files |*.xls";
+            sfd.RestoreDirectory = true;
+
+            try
+            {
+                if (sfd.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                {
+                    return;
+                }
+                else
+                {
+                    Excel.Application oXL;
+                    Excel._Workbook oWB;
+                    Excel._Worksheet oSheet;
+                    //Excel.Range oRng;
+
+                    try
+                    {
+                        //Start Excel and get Application object.
+                        oXL = new Excel.Application();
+                        oXL.Visible = true;
+
+                        //Get a new workbook.
+                        oWB = (Excel._Workbook)(oXL.Workbooks.Add(Missing.Value));
+                        oSheet = (Excel._Worksheet)oWB.ActiveSheet;
+
+                        oSheet.Cells[1, 1] = "Data Pelanggan";
+                        oSheet.Cells[1, 1].Font.Bold = true;
+                        oSheet.Range[oSheet.Cells[1, 1], oSheet.Cells[1, 6]].Merge();
+                        oSheet.Cells[1, 1].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+
+                        int init_row = 3;
+                        oSheet.Cells[1, 1].ColumnWidth = 4;
+                        oSheet.Cells[1, 2].ColumnWidth = 10;
+                        oSheet.Cells[1, 3].ColumnWidth = 24;
+                        oSheet.Cells[1, 4].ColumnWidth = 30;
+                        oSheet.Cells[1, 5].ColumnWidth = 10;
+                        oSheet.Cells[1, 6].ColumnWidth = 15;
+                        
+                        //Add table headers going cell by cell.
+                        oSheet.Cells[init_row, 1] = "No.";
+                        oSheet.Cells[init_row, 2] = "No. Pelanggan";
+                        oSheet.Cells[init_row, 3] = "Nama";
+                        oSheet.Cells[init_row, 4] = "Alamat";
+                        oSheet.Cells[init_row, 5] = "RT";
+                        oSheet.Cells[init_row, 6] = "Telepon";                        
+                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 6]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
+                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 6]].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 6]].Style.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
+                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 6]].WrapText = true;
+
+                        oSheet.Cells[init_row, 1].EntireRow.Font.Bold = true;
+                        oSheet.Cells[init_row, 1].RowHeight = 18;
+
+                        init_row++;
+
+                        using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
+                        {
+                            conn.Open();
+
+                            String query = "SELECT * FROM members WHERE active = 1 ORDER BY rt, urut_rt";                            
+
+                            using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
+                            {
+                                using (SQLiteDataReader reader = cmd.ExecuteReader())
+                                {
+                                    int no = 1;
+                                    while (reader.Read())
+                                    {
+                                        oSheet.Cells[init_row, 1] = no;
+                                        oSheet.Cells[init_row, 2] = "'" + string.Format("{0:00}", reader.GetValue(1)) + "." + reader["rt"].ToString();
+                                        oSheet.Cells[init_row, 3] = reader["nama"].ToString(); //Nama
+                                        oSheet.Cells[init_row, 4] = "Blok " + reader["blok"].ToString() + " No. " + reader["no_rumah"].ToString(); //Nama
+                                        oSheet.Cells[init_row, 5] = "'" + reader.GetValue(6).ToString() + "/09";
+                                        oSheet.Cells[init_row, 6] = reader["telp"].ToString(); //Nama
+
+                                        no++;
+                                        init_row++;
+                                    }
+                                }
+                            }
+                            conn.Close();
+                        }
+
+                        init_row--;
+
+                        oSheet.get_Range("C4", "F" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft;
+                        oSheet.get_Range("E4", "E" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+                        oSheet.get_Range("A3", "F" + init_row).Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
+                        //Make sure Excel is visible and give the user control
+                        //of Microsoft Excel's lifetime.
+                        oXL.Visible = true;
+                        oXL.UserControl = true;
+
+                        String filename = sfd.FileName;
+                        oWB.SaveAs(filename);
+                        //oWB.Close();
+
+                        MessageBox.Show("Data Pelanggan Telah Disimpan");
+                    }
+                    catch (Exception theException)
+                    {
+                        String errorMessage;
+                        errorMessage = "Error: ";
+                        errorMessage = String.Concat(errorMessage, theException.Message);
+                        errorMessage = String.Concat(errorMessage, " Line: ");
+                        errorMessage = String.Concat(errorMessage, theException.Source);
+
+                        MessageBox.Show(errorMessage, "Error");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("ERROR: " + ex.Message);
+            }            
+        }
+
     }
 }

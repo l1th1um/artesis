@@ -100,6 +100,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="viewBayarFrm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="viewBayarFrm.Designer.cs">
+      <DependentUpon>viewBayarFrm.cs</DependentUpon>
+    </Compile>
     <Compile Include="reportTahunan.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -158,6 +164,9 @@
     </Compile>
     <EmbeddedResource Include="About.resx">
       <DependentUpon>About.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="viewBayarFrm.resx">
+      <DependentUpon>viewBayarFrm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="reportTahunan.resx">
       <DependentUpon>reportTahunan.cs</DependentUpon>
@@ -237,6 +246,9 @@
   <ItemGroup>
     <None Include="Resources\Printer-icon16.png" />
     <None Include="Resources\Printer-icon22.png" />
+    <None Include="Resources\import-export-16.png" />
+    <None Include="Resources\icon_view_16.png" />
+    <None Include="Resources\export.png" />
     <Content Include="water.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
