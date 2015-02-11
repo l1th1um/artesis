@@ -49,6 +49,8 @@ namespace Artesis
         double bebanBayar;
         double totalBayar;
 
+        String jsonTarif;
+
 
         public Form1()
         {
@@ -593,7 +595,7 @@ namespace Artesis
                 String bulan = cbBulanTghn.SelectedValue.ToString();
                 String tahun = cbTahunTghn.SelectedItem.ToString();
                 tanggalTagihan = tahun + "-" + bulan + "-01";
-
+                
                 using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
                 {
                     conn.Open();
@@ -853,8 +855,10 @@ namespace Artesis
                     //End Check Max Invoice
 
 
-                    String savePayment = "INSERT INTO pembayaran(meteran_id, no_invoice, invoice_suffix, jumlah, tgl_bayar, beban, denda, biaya_pemakaian) VALUES  ";
-                    savePayment += "(" + meteran_id + ", " + max_invoice + ", '" + suffix + "', " + totalBayar + " , datetime('now'), " + bebanTetap  + "," + dendaBayar + ", " + bebanBayar +")";
+                    String savePayment = "INSERT INTO pembayaran(meteran_id, no_invoice, invoice_suffix, jumlah, tgl_bayar, beban, denda, biaya_pemakaian, tarif) VALUES  ";
+                    savePayment += "(" + meteran_id + ", " + max_invoice + ", '" + suffix + "', " + totalBayar + " , datetime('now'), " + bebanTetap  + "," + dendaBayar + ", " + bebanBayar +",'" + jsonTarif + "')";
+
+                    System.Diagnostics.Debug.WriteLine(savePayment);
 
                     using (SQLiteCommand cmd4 = new SQLiteCommand(savePayment, conn))
                     {
@@ -865,6 +869,9 @@ namespace Artesis
                     cmd.ExecuteNonQuery();
                     cmd.Dispose();
 
+                    //Prepare for Kuitansi
+                    memberidBayar = memberTagihan;
+                    
                     PrintDialog printDialog = new PrintDialog();
 
                     PrintDocument printDoc = new PrintDocument();
@@ -889,11 +896,7 @@ namespace Artesis
                 {
                     MessageBox.Show("Error ! Data Pembayaran tidak disimpan");
                 }
-                //}  
-
-
-
-
+                //}
                 conn.Close();
                 conn.Dispose();
             }
@@ -903,202 +906,196 @@ namespace Artesis
 
         void printDoc_PrintPage(object sender, PrintPageEventArgs e)
         {
-            Int32 bebanTetap = 0;
-            Int32 denda = 0;
-            Int32 tarif1 = 0;
-            Int32 tarif2 = 0;
-            Int32 tarif3 = 0;
-            Int32 tarif4 = 0;
-            Int32 tarif5 = 0;
+            this.printKuitansi(e);
+        }
 
+        private void printKuitansi(PrintPageEventArgs e)
+        {
             using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
             {
                 conn.Open();
-                string command = "SELECT * FROM tarif";
+
+                String command = "SELECT * FROM members u ";
+                command += "LEFT JOIN meteran m ON u.id = m.member_id AND tanggal = '" + tanggalTagihan + "' ";
+                command += "LEFT JOIN pembayaran p ON p.meteran_id = m.id ";
+                command += "WHERE u.id = '" + memberidBayar + "'";
+
                 using (SQLiteCommand cmd = new SQLiteCommand(command, conn))
                 {
                     using (SQLiteDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            bebanTetap = reader.GetInt32(0);
-                            denda = reader.GetInt32(1);
-                            tarif1 = reader.GetInt32(2);
-                            tarif2 = reader.GetInt32(3);
-                            tarif3 = reader.GetInt32(4);
-                            tarif4 = reader.GetInt32(5);
-                            tarif5 = reader.GetInt32(6);
+                            Graphics graphic = e.Graphics;
+
+                            Font font = new Font("Arial", 12, GraphicsUnit.Pixel);
+                            Font fontUnderline = new Font("Arial", 16, FontStyle.Underline | FontStyle.Bold, GraphicsUnit.Pixel);
+                            Font fontHeader1 = new Font("Arial", 16, FontStyle.Bold, GraphicsUnit.Pixel);
+                            Font fontHeader2 = new Font("Arial", 14, FontStyle.Bold, GraphicsUnit.Pixel);
+                            Font footerBold = new Font("Arial", 8, FontStyle.Bold, GraphicsUnit.Pixel);
+                            Font footer = new Font("Arial", 8, GraphicsUnit.Pixel);
+                            Font footer_small = new Font("Arial", 6, GraphicsUnit.Pixel);
+
+                            float fontHeight = font.GetHeight();
+
+                            int startX = 40;
+                            int startY = 20;
+                            int offset = 20;
+                            int tab1 = 110;
+                            int tab2 = 150;
+                            int tab3 = 480;
+                            int tab4 = 630;
+                            int tab5 = 650;
+                            int recWidth = 90;
+                            int recHeight = 20;
+                            int spacing = 20;
+
+                            StringFormat stringFormat = new StringFormat();
+                            stringFormat.Alignment = StringAlignment.Far;
+                            stringFormat.LineAlignment = StringAlignment.Near;
+                            //Rectangle rect1 = new Rectangle(10, 10, 130, 140);
+
+
+                            String periode = String.Format(new System.Globalization.CultureInfo("id-ID"), "{0:MMMM yyyy}", reader.GetDateTime(12)).ToUpper();
+                            double pemakaian = reader.GetDouble(14) - reader.GetDouble(13);
+                            String alamat = "Blok " + reader["blok"].ToString() + " No. " + reader["no_rumah"].ToString() + " RT " + reader["rt"].ToString() + "/09";
+                            String tglPembayaran = String.Format(new System.Globalization.CultureInfo("id-ID"), "{0:dd MMMM yyyy}", reader.GetDateTime(24));
+                            Dictionary<string, string> tarif = reader["tarif"].ToString().FromJsonToDictionary();
+
+
+                            graphic.DrawString("PENGELOLA AIR ARTESIS PERUM LAKSANA MEKAR ASRI", fontHeader1, new SolidBrush(Color.Black), startX + 180, startY);
+
+                            graphic.DrawString("RW 09 Desa Laksana Mekar Kec. Padalarang Kab. Bandung Barat", fontHeader1, new SolidBrush(Color.Black), startX + 160, startY + offset);
+                            offset += 70;
+
+                            graphic.DrawString("KUITANSI PEMBAYARAN AIR BULAN " + periode, fontHeader2, new SolidBrush(Color.Black), startX + 220, startY + offset);
+
+                            offset += 100;
+
+                            //Logo
+
+                            //String logoPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\Artesis\logo.gif";
+                            var logo = new Bitmap(Artesis.Properties.Resources.logo);
+                            Point logoPoint = new Point(50, 20);
+                            graphic.DrawImage(logo, logoPoint);
+
+                            //End Logo
+
+                            graphic.DrawString("No. Kuitansi", font, new SolidBrush(Color.Black), startX, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
+                            graphic.DrawString(string.Format("{0:000}", reader["no_invoice"]) + reader["invoice_suffix"].ToString(), font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
+
+                            graphic.DrawString("Meteran Awal", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
+                            graphic.DrawString(string.Format("{0:N0}", reader["awal"]) + " m3", font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
+
+
+                            offset += spacing;
+
+                            graphic.DrawString("No. Pelanggan", font, new SolidBrush(Color.Black), startX, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
+                            graphic.DrawString(string.Format("{0:00}", reader["urut_rt"]) + "." + reader["rt"].ToString(), font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
+
+                            graphic.DrawString("Meteran Akhir", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
+                            graphic.DrawString(string.Format("{0:N0}", reader["akhir"]) + " m3", font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
+
+                            offset += spacing;
+
+                            graphic.DrawString("Nama", font, new SolidBrush(Color.Black), startX, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
+                            graphic.DrawString(reader["nama"].ToString(), font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
+
+                            graphic.DrawString("Jumlah Pemakaian", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
+                            graphic.DrawString(string.Format("{0:N0}", pemakaian) + " m3", font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
+
+                            offset += spacing;
+
+                            graphic.DrawString("Alamat", font, new SolidBrush(Color.Black), startX, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
+                            graphic.DrawString(alamat, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
+                            
+                            graphic.DrawString("Beban Tetap", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
+                            graphic.DrawString(string.Format("{0:N0}", reader["beban"]), font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
+
+                            offset += spacing;
+
+                            graphic.DrawString("Perumahan Laksana Mekar Asri Padalarang", font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
+
+                            graphic.DrawString("Biaya Pemakaian", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
+                            graphic.DrawString(string.Format("{0:N0}", reader["biaya_pemakaian"]), font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
+
+                            offset += spacing;
+
+                            graphic.DrawString("Tanggal Pembayaran", font, new SolidBrush(Color.Black), startX, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
+                            graphic.DrawString(tglPembayaran, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
+
+                            graphic.DrawString("Denda", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
+                            graphic.DrawString(string.Format("{0:N0}", reader["denda"]), font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
+
+                            offset += spacing;
+                            
+                            graphic.DrawString("TOTAL", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
+                            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
+                            graphic.DrawString(string.Format("{0:N0}", reader["jumlah"]), fontUnderline, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
+
+                            offset += 40;
+
+                            //Footer
+                            int tabFooter1 = 80;
+                            int tabFooter2 = 110;
+                            int tabFooter3 = 230;
+                            int tabFooter4 = 310;
+                            int tabFooter5 = 340;
+
+                            graphic.DrawString("Daftar Tarif : ", footerBold, new SolidBrush(Color.Black), startX, startY + offset);
+                            offset += spacing;
+
+                            graphic.DrawString("Beban Tetap", footer, new SolidBrush(Color.Black), startX, startY + offset);
+                            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter1, startY + offset);
+                            graphic.DrawString(tarif["beban"].Replace('.', ','), footer, new SolidBrush(Color.Black), startX + tabFooter2, startY + offset);
+
+                            graphic.DrawString("16-20 m3", footer, new SolidBrush(Color.Black), startX + tabFooter3, startY + offset);
+                            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter4, startY + offset);
+                            graphic.DrawString(tarif["tarif3"].Replace('.', ','), footer, new SolidBrush(Color.Black), startX + tabFooter5, startY + offset);
+
+                            offset += spacing;
+
+                            graphic.DrawString("0 - 10 m3", footer, new SolidBrush(Color.Black), startX, startY + offset);
+                            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter1, startY + offset);
+                            graphic.DrawString(tarif["tarif1"].Replace('.', ','), footer, new SolidBrush(Color.Black), startX + tabFooter2, startY + offset);
+
+                            graphic.DrawString("21-25 m3", footer, new SolidBrush(Color.Black), startX + tabFooter3, startY + offset);
+                            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter4, startY + offset);
+                            graphic.DrawString(tarif["tarif4"].Replace('.', ','), footer, new SolidBrush(Color.Black), startX + tabFooter5, startY + offset);
+
+                            offset += spacing;
+
+                            graphic.DrawString("11 - 15 m3", footer, new SolidBrush(Color.Black), startX, startY + offset);
+                            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter1, startY + offset);
+                            graphic.DrawString(tarif["tarif2"].Replace('.', ','), footer, new SolidBrush(Color.Black), startX + tabFooter2, startY + offset);
+
+                            graphic.DrawString("> 25 m3", footer, new SolidBrush(Color.Black), startX + tabFooter3, startY + offset);
+                            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter4, startY + offset);
+                            graphic.DrawString(tarif["tarif5"].Replace('.',','), footer, new SolidBrush(Color.Black), startX + tabFooter5, startY + offset);
+
+                            offset += 40;
+
+                            graphic.DrawString("* Pembayaran air artesis dimulai setelah tanggal 5", footer_small, new SolidBrush(Color.Black), startX, startY + offset);
+
+                            offset += 10;
+                            graphic.DrawString("* Pembayaran air artesis setelah tanggal 20 dikenakan denda keterlambatan", footer_small, new SolidBrush(Color.Black), startX, startY + offset);
                         }
                     }
                 }
                 conn.Close();
-            }
-
-
-            Graphics graphic = e.Graphics;
-
-            Font font = new Font("Arial", 12, GraphicsUnit.Pixel);
-            Font fontUnderline = new Font("Arial", 16, FontStyle.Underline | FontStyle.Bold, GraphicsUnit.Pixel);
-            Font fontHeader1 = new Font("Arial", 16, FontStyle.Bold, GraphicsUnit.Pixel);
-            Font fontHeader2 = new Font("Arial", 14, FontStyle.Bold, GraphicsUnit.Pixel);
-            Font footerBold = new Font("Arial", 8, FontStyle.Bold, GraphicsUnit.Pixel);
-            Font footer = new Font("Arial", 8, GraphicsUnit.Pixel);
-
-            float fontHeight = font.GetHeight();
-
-            int startX = 40;
-            int startY = 20;
-            int offset = 20;
-            int tab1 = 110;
-            int tab2 = 150;
-            int tab3 = 480;
-            int tab4 = 630;
-            int tab5 = 650;
-            int recWidth = 90;
-            int recHeight = 20;
-            int spacing = 30;
-
-            StringFormat stringFormat = new StringFormat();
-            stringFormat.Alignment = StringAlignment.Far;
-            stringFormat.LineAlignment = StringAlignment.Near;
-            //Rectangle rect1 = new Rectangle(10, 10, 130, 140);
-
-
-            String periode = blnBayar + " " + thnBayar;
-
-            graphic.DrawString("PENGELOLA AIR ARTESIS PERUM LAKSANA MEKAR ASRI", fontHeader1, new SolidBrush(Color.Black), startX + 180, startY);
-
-            graphic.DrawString("RW 09 Desa Laksana Mekar Kec. Padalarang Kab. Bandung Barat", fontHeader1, new SolidBrush(Color.Black), startX + 160, startY + offset);
-            offset += 70;
-
-            graphic.DrawString("KUITANSI PEMBAYARAN AIR BULAN " + periode, fontHeader2, new SolidBrush(Color.Black), startX + 220, startY + offset);
-
-            offset += 100;
-
-            //Logo
-            /*
-            String logoPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\Artesis\logo.gif";
-            Image logo = Image.FromFile(logoPath);
-            Point logoPoint = new Point(50, 20);
-            graphic.DrawImage(logo, logoPoint);
-             * */
-            //End Logo
-
-            graphic.DrawString("No. Kuitansi", font, new SolidBrush(Color.Black), startX, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
-            graphic.DrawString(invoiceBayar, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
-
-            graphic.DrawString("Meteran Awal", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
-            graphic.DrawString(awalBayar.ToString("N") + " m3", font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
-
-
-            offset += spacing;
-
-            graphic.DrawString("No. Pelanggan", font, new SolidBrush(Color.Black), startX, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
-            graphic.DrawString(memberidBayar, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
-
-            graphic.DrawString("Meteran Akhir", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
-            graphic.DrawString(akhirBayar.ToString("N") + " m3", font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
-
-            offset += spacing;
-
-            graphic.DrawString("No. Urut", font, new SolidBrush(Color.Black), startX, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
-            graphic.DrawString(noUrutRTBayar, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
-
-            graphic.DrawString("Jumlah Pemakaian", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
-            graphic.DrawString(pemakaianBayar.ToString("N") + " m3", font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
-
-            offset += spacing;
-
-            graphic.DrawString("Nama", font, new SolidBrush(Color.Black), startX, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
-            graphic.DrawString(namaBayar, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
-
-            graphic.DrawString("Beban Tetap", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
-            graphic.DrawString(bebanTetap.ToString("N0"), font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
-
-            offset += spacing;
-
-            graphic.DrawString("Alamat", font, new SolidBrush(Color.Black), startX, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
-            graphic.DrawString(alamatBayar, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
-
-            graphic.DrawString("Biaya Pemakaian", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
-            graphic.DrawString(bebanBayar.ToString("N0"), font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
-
-            offset += spacing;
-
-            DateTime now = DateTime.Now;
-            String current = now.Day.ToString() + " " + bulanDic[now.ToString("MM")] + " " + now.Year.ToString();
-
-            /*graphic.DrawString("Tanggal Pembayaran", font, new SolidBrush(Color.Black), startX, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
-            graphic.DrawString(current, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);*/
-            graphic.DrawString("Perumahan Laksana Mekar Asri Padalarang", font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
-
-            graphic.DrawString("Denda", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
-            graphic.DrawString(dendaBayar.ToString("N0"), font, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
-
-            offset += spacing;
-
-            graphic.DrawString("Tanggal Pembayaran", font, new SolidBrush(Color.Black), startX, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab1, startY + offset);
-            graphic.DrawString(current, font, new SolidBrush(Color.Black), startX + tab2, startY + offset);
-
-            graphic.DrawString("TOTAL", font, new SolidBrush(Color.Black), startX + tab3, startY + offset);
-            graphic.DrawString(":", font, new SolidBrush(Color.Black), startX + tab4, startY + offset);
-            graphic.DrawString(totalBayar.ToString("N0"), fontUnderline, new SolidBrush(Color.Black), new Rectangle(startX + tab5, startY + offset, recWidth, recHeight), stringFormat);
-
-            offset += 60;
-
-            //Footer
-            int tabFooter1 = 80;
-            int tabFooter2 = 110;
-            int tabFooter3 = 230;
-            int tabFooter4 = 310;
-            int tabFooter5 = 340;
-
-            graphic.DrawString("Daftar Tarif : ", footerBold, new SolidBrush(Color.Black), startX, startY + offset);
-            offset += spacing;
-
-            graphic.DrawString("Beban Tetap", footer, new SolidBrush(Color.Black), startX, startY + offset);
-            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter1, startY + offset);
-            graphic.DrawString(bebanTetap.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter2, startY + offset);
-
-            graphic.DrawString("16-20 m3", footer, new SolidBrush(Color.Black), startX + tabFooter3, startY + offset);
-            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter4, startY + offset);
-            graphic.DrawString(tarif3.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter5, startY + offset);
-
-            offset += spacing;
-
-            graphic.DrawString("0 - 10 m3", footer, new SolidBrush(Color.Black), startX, startY + offset);
-            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter1, startY + offset);
-            graphic.DrawString(tarif1.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter2, startY + offset);
-
-            graphic.DrawString("21-25 m3", footer, new SolidBrush(Color.Black), startX + tabFooter3, startY + offset);
-            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter4, startY + offset);
-            graphic.DrawString(tarif4.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter5, startY + offset);
-
-            offset += spacing;
-
-            graphic.DrawString("11 - 15 m3", footer, new SolidBrush(Color.Black), startX, startY + offset);
-            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter1, startY + offset);
-            graphic.DrawString(tarif2.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter2, startY + offset);
-
-            graphic.DrawString("> 25 m3", footer, new SolidBrush(Color.Black), startX + tabFooter3, startY + offset);
-            graphic.DrawString(":", footer, new SolidBrush(Color.Black), startX + tabFooter4, startY + offset);
-            graphic.DrawString(tarif5.ToString("N0"), footer, new SolidBrush(Color.Black), startX + tabFooter5, startY + offset);
-            
+            }            
         }
-
         private void tentangToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //DialogResult dr = new DialogResult();
@@ -1160,6 +1157,18 @@ namespace Artesis
                             biayaBeban[16] = reader.GetInt32(4);
                             biayaBeban[21] = reader.GetInt32(5);
                             biayaBeban[25] = reader.GetInt32(6);
+
+                            Dictionary<string, string> tarifDict = new Dictionary<string, string>();
+
+                            tarifDict.Add("beban", string.Format("{0:N0}", reader["beban_tetap"]));
+                            tarifDict.Add("denda", string.Format("{0:N0}", reader["denda"]));
+                            tarifDict.Add("tarif1", string.Format("{0:N0}", reader["tarif1"]));
+                            tarifDict.Add("tarif2", string.Format("{0:N0}", reader["tarif2"]));
+                            tarifDict.Add("tarif3", string.Format("{0:N0}", reader["tarif3"]));
+                            tarifDict.Add("tarif4", string.Format("{0:N0}", reader["tarif4"]));
+                            tarifDict.Add("tarif5", string.Format("{0:N0}", reader["tarif5"]));
+
+                            jsonTarif = tarifDict.FromDictionaryToJson();
                         }
                     }
                 }
@@ -1256,13 +1265,13 @@ namespace Artesis
             }
         }
 
-        private void tahunanToolStripMenuItem_Click(object sender, EventArgs e)
+        private void pelangganToolStripMenuItem_Click(object sender, EventArgs e)
         {
             DialogResult dr = new DialogResult();
 
-            reportTahunan reportThn = new reportTahunan();
+            reportPelanggan reportPelanggan = new reportPelanggan();
 
-            dr = reportThn.ShowDialog();
+            dr = reportPelanggan.ShowDialog();
 
             if (dr == DialogResult.OK)
             {
@@ -1348,7 +1357,26 @@ namespace Artesis
 
             if (e.ColumnIndex == 9)
             {
-                MessageBox.Show("Print Kakak");
+                //Print Kuitansi Individual
+
+                tanggalTagihan = tanggal;
+                memberidBayar = member_id;
+
+
+                PrintDialog printDialog = new PrintDialog();
+
+                PrintDocument printDoc = new PrintDocument();
+
+                printDialog.Document = printDoc;
+
+                printDoc.PrintPage += new PrintPageEventHandler(printDoc_PrintPage);
+
+                DialogResult result = printDialog.ShowDialog();
+
+                if (result == DialogResult.OK)
+                {
+                    printDoc.Print();
+                }
             }
             else if (e.ColumnIndex == 10)
             {
@@ -1539,5 +1567,35 @@ namespace Artesis
             }            
         }
 
+        private void tahunanToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //Laporan Tahunan
+            DialogResult dr = new DialogResult();
+
+            reportTahunan reportTahunan = new reportTahunan();
+
+            dr = reportTahunan.ShowDialog();
+
+            if (dr == DialogResult.OK)
+            {
+                //this.prepareTarif();
+            }
+        }
+    
+    }
+
+    public static class Extensions
+    {
+        public static string FromDictionaryToJson(this Dictionary<string, string> dictionary)
+        {
+            var kvs = dictionary.Select(kvp => string.Format("\"{0}\":\"{1}\"", kvp.Key, string.Join(",", kvp.Value)));
+            return string.Concat("{", string.Join(",", kvs), "}");
+        }
+
+        public static Dictionary<string, string> FromJsonToDictionary(this string json)
+        {
+            string[] keyValueArray = json.Replace("{", string.Empty).Replace("}", string.Empty).Replace("\"", string.Empty).Split(',');
+            return keyValueArray.ToDictionary(item => item.Split(':')[0], item => item.Split(':')[1]);
+        }
     }
 }

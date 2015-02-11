@@ -118,7 +118,7 @@ namespace Artesis
 
                         oSheet.Cells[1, 1] = "Laporan Bulan " + bulan + " " + tahun;
                         oSheet.Cells[1, 1].Font.Bold = true;
-                        oSheet.Range[oSheet.Cells[1, 1], oSheet.Cells[1, 8]].Merge();
+                        oSheet.Range[oSheet.Cells[1, 1], oSheet.Cells[1, 9]].Merge();
                         oSheet.Cells[1, 1].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
                         
                         int init_row = 3;
@@ -130,6 +130,7 @@ namespace Artesis
                         oSheet.Cells[1, 6].ColumnWidth = 18;
                         oSheet.Cells[1, 7].ColumnWidth = 12;
                         oSheet.Cells[1, 8].ColumnWidth = 14;
+                        oSheet.Cells[1, 9].ColumnWidth = 13;
 
                         //Add table headers going cell by cell.
                         oSheet.Cells[init_row, 1] = "No.";
@@ -140,10 +141,12 @@ namespace Artesis
                         oSheet.Cells[init_row, 6] = "Tanggal Pembayaran";
                         oSheet.Cells[init_row, 7] = "Pemakaian";                        
                         oSheet.Cells[init_row, 8] = "Jumlah";
-                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 8]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
-                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 8]].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
-                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 8]].Style.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
-                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 8]].WrapText = true;
+                        oSheet.Cells[init_row, 9] = "Keterangan";
+
+                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 9]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
+                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 9]].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 9]].Style.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
+                        oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 9]].WrapText = true;
 
                         oSheet.Cells[init_row, 1].EntireRow.Font.Bold = true;
                         oSheet.Cells[init_row, 1].RowHeight = 18;
@@ -154,14 +157,18 @@ namespace Artesis
                         {
                             conn.Open();
 
-                            String query = "SELECT no_invoice, invoice_suffix, member_id, urut_rt, nama, rt, tgl_bayar, jumlah, awal, akhir ";
-                            query += "FROM pembayaran p ";
-                            query += "JOIN meteran m ON m.id = p.meteran_id ";
+                            string periode = String.Format("{0}-{1}-{2}", tahun, cbBulan.SelectedValue.ToString(), "01");
+
+                            String query = "SELECT no_invoice, invoice_suffix, member_id, urut_rt, nama, rt, tgl_bayar, jumlah, awal, akhir, bayar ";
+                            query += "FROM meteran m ";
+                            query += "LEFT JOIN pembayaran p ON m.id = p.meteran_id ";
                             query += "JOIN members u ON u.id = m.member_id ";
-                            query += "WHERE strftime('%m', tgl_bayar) = '" + cbBulan.SelectedValue.ToString() + "' ";
-                            query += "AND strftime('%Y', tgl_bayar)  = '" + tahun + "' ";
+                            query += "WHERE m.tanggal = '" + periode + "' ";
+                            query += "AND awal IS NOT NULL AND akhir IS NOT NULL ";
                             query += "ORDER BY rt, nama";
                             
+                            System.Diagnostics.Debug.WriteLine(query);
+
                             using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
                             {
                                 using (SQLiteDataReader reader = cmd.ExecuteReader())
@@ -170,15 +177,32 @@ namespace Artesis
                                     while (reader.Read())
                                     {
                                         double pemakaian = reader.GetDouble(9) - reader.GetDouble(8);
-                                                                               
+
+                                        string tgl_pembayaran = "";
+                                        string keterangan = "";
+                                        Int32 jumlah = 0;
+
+                                        if (reader.GetInt32(10) == 1)
+                                        {
+                                            keterangan = "Lunas";
+                                            tgl_pembayaran = reader.GetDateTime(6).ToString();
+                                            jumlah = reader.GetInt32(7);
+                                        }
+                                        else
+                                        {
+                                            keterangan = "Belum Dibayar";
+                                            oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 9]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Orange);
+                                        }
+
                                         oSheet.Cells[init_row, 1] = no;
                                         oSheet.Cells[init_row, 2] = string.Format("{0:000}", reader.GetValue(0)) + reader.GetValue(1).ToString();                                        
                                         oSheet.Cells[init_row, 3] = "'" + reader.GetValue(3).ToString() + "." + reader.GetValue(5).ToString(); //No Urut
                                         oSheet.Cells[init_row, 4] = reader.GetValue(4).ToString() ; //Nama
                                         oSheet.Cells[init_row, 5] = "'" + reader.GetValue(5).ToString() + " /09";
-                                        oSheet.Cells[init_row, 6] = reader.GetDateTime(6).ToString();
+                                        oSheet.Cells[init_row, 6] = tgl_pembayaran;
                                         oSheet.Cells[init_row, 7] = pemakaian.ToString(); //Pemakaian                                        
-                                        oSheet.Cells[init_row, 8] = reader.GetValue(7);
+                                        oSheet.Cells[init_row, 8] = jumlah;
+                                        oSheet.Cells[init_row, 9] = keterangan;
 
                                         no++;
                                         init_row++;
@@ -197,12 +221,12 @@ namespace Artesis
                         oSheet.Cells[init_row, 7].Font.Bold = true;
                         oSheet.Cells[init_row, 8].Font.Bold = true;
                          
-                        oSheet.get_Range("E4", "E" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft;
-                        oSheet.get_Range("H4", "H" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
+                        oSheet.get_Range("D4", "D" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft;
+                        oSheet.get_Range("G4", "H" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
                         oSheet.get_Range("F4", "F" + init_row).NumberFormat = "dd/mm/yyyy hh:mm";
                         //oSheet.get_Range("G4", "G" + init_row).NumberFormat = "#,###,###";
                         oSheet.get_Range("H4", "H" + init_row).NumberFormat = "#,###,###";
-                        oSheet.get_Range("A3", "H" + init_row).Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
+                        oSheet.get_Range("A3", "I" + init_row).Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
                         
                         //Make sure Excel is visible and give the user control
                         //of Microsoft Excel's lifetime.

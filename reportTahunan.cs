@@ -19,10 +19,14 @@ namespace Artesis
 
         public reportTahunan()
         {
-            InitializeComponent();            
+            InitializeComponent();
+            this.getMonth();
             this.getYear();
-            this.prepareComboBoxMember();
 
+        }
+
+        private void getMonth()
+        {
             bulanDic.Add("01", "Januari");
             bulanDic.Add("02", "Februari");
             bulanDic.Add("03", "Maret");
@@ -35,9 +39,21 @@ namespace Artesis
             bulanDic.Add("10", "Oktober");
             bulanDic.Add("11", "November");
             bulanDic.Add("12", "Desember");
+
+            blnAwal.DataSource = new BindingSource(bulanDic, null);
+            blnAwal.DisplayMember = "Value";
+            blnAwal.ValueMember = "Key";
+
+            blnAwal.SelectedIndex = 0;
+
+            blnAkhir.DataSource = new BindingSource(bulanDic, null);
+            blnAkhir.DisplayMember = "Value";
+            blnAkhir.ValueMember = "Key";
+
+            DateTime now = DateTime.Now;
+            blnAkhir.SelectedIndex = now.Month - 1;          
         }
 
-        
         private void getYear()
         {
             using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
@@ -67,22 +83,28 @@ namespace Artesis
                 }
 
                 CBTahun.SelectedItem = now.Year.ToString();
+
                 conn.Close();
             }
         }
 
         private void reportMonthBtn_Click(object sender, EventArgs e)
         {
-            if (cbAnggota.SelectedValue.ToString() != "0")
+            if (blnAkhir.SelectedIndex >= blnAwal.SelectedIndex)
             {
-                String memberID = cbAnggota.SelectedValue.ToString();
-                String nama = this.getMember(Int32.Parse(memberID));
-
                 SaveFileDialog sfd = new SaveFileDialog();
-                                
-                String tahun = CBTahun.SelectedItem.ToString();
 
-                sfd.FileName = "Laporan " + nama + "  Tahun  " + tahun + ".xls";
+                string tahun = CBTahun.SelectedItem.ToString();
+
+                string title = "Pembayaran";
+
+                if (pemakaianRB.Checked)
+                {
+                    title = "Pemakaian";
+                }
+                    
+
+                sfd.FileName = "Laporan " + title + " " + bulanDic[blnAwal.SelectedValue.ToString()] + "-" + bulanDic[blnAkhir.SelectedValue.ToString()] + " Tahun " + tahun + ".xls";
                 sfd.Filter = "Excel files |*.xls";
                 sfd.RestoreDirectory = true;
 
@@ -94,6 +116,7 @@ namespace Artesis
                     }
                     else
                     {
+                        int row = 1;
                         Excel.Application oXL;
                         Excel._Workbook oWB;
                         Excel._Worksheet oSheet;
@@ -109,124 +132,140 @@ namespace Artesis
                             oWB = (Excel._Workbook)(oXL.Workbooks.Add(Missing.Value));
                             oSheet = (Excel._Worksheet)oWB.ActiveSheet;
 
-                            oSheet.Cells[1, 1] = "Laporan Tahun "  + tahun;
-                            oSheet.Cells[1, 1].Font.Bold = true;
-                            oSheet.Range[oSheet.Cells[1, 1], oSheet.Cells[1, 5]].Merge();
-                            oSheet.Cells[1, 1].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
-
-                            oSheet.Cells[3, 1] = "No Pelanggan";
-                            oSheet.Cells[4, 1] = "No Urut";
-                            oSheet.Cells[5, 1] = "Nama";
-                            oSheet.Cells[6, 1] = "Alamat";
-                            oSheet.Cells[7, 1] = "No Telepon";
-                            oSheet.Range[oSheet.Cells[3, 1], oSheet.Cells[3, 2]].Merge();
-                            oSheet.Range[oSheet.Cells[4, 1], oSheet.Cells[4, 2]].Merge();
-                            oSheet.Range[oSheet.Cells[5, 1], oSheet.Cells[5, 2]].Merge();
-                            oSheet.Range[oSheet.Cells[6, 1], oSheet.Cells[6, 2]].Merge();
-                            oSheet.Range[oSheet.Cells[7, 1], oSheet.Cells[7, 2]].Merge();
-
-                            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
+                            for (int x = blnAwal.SelectedIndex + 1; x <= blnAkhir.SelectedIndex + 1; x++)
                             {
-                                conn.Open();
+                                String tanggal = string.Format("{0}-{1:00}-{2}", CBTahun.SelectedItem, x, "01");
 
-                                String query = "SELECT * FROM members WHERE id = " + memberID;                                
+                                oSheet.Cells[row, 1] = "Laporan "+ title + " Bulan " + bulanDic[string.Format("{0:00}", x)] + " " + tahun;
+                                oSheet.Cells[row, 1].Font.Bold = true;
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].Merge();
+                                oSheet.Cells[row, 1].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
 
-                                using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
+                                row += 2;
+                                oSheet.Cells[row, 1].ColumnWidth = 4;
+                                oSheet.Cells[row, 2].ColumnWidth = 28;
+                                oSheet.Cells[row, 3].ColumnWidth = 10;
+                                oSheet.Cells[row, 4].ColumnWidth = 22;
+                                oSheet.Cells[row, 5].ColumnWidth = 8;
+                                oSheet.Cells[row, 6].ColumnWidth = 18;
+                                oSheet.Cells[row, 7].ColumnWidth = 12;
+                                oSheet.Cells[row, 8].ColumnWidth = 14;
+                                oSheet.Cells[row, 9].ColumnWidth = 13;
+
+                                //Add table headers going cell by cell.
+                                oSheet.Cells[row, 1] = "No.";
+                                oSheet.Cells[row, 2] = "No. Kuitansi";
+                                oSheet.Cells[row, 3] = "No. Pelanggan";
+                                oSheet.Cells[row, 4] = "Nama";
+                                oSheet.Cells[row, 5] = "RT";
+                                oSheet.Cells[row, 6] = "Tanggal Pembayaran";
+                                oSheet.Cells[row, 7] = "Pemakaian";
+                                oSheet.Cells[row, 8] = "Jumlah";
+                                oSheet.Cells[row, 9] = "Keterangan";
+
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].Style.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].WrapText = true;
+
+                                oSheet.Cells[row, 1].EntireRow.Font.Bold = true;
+                                oSheet.Cells[row, 1].RowHeight = 18;
+
+                                row++;
+
+                                int start_row = row;
+
+                                using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
                                 {
-                                    using (SQLiteDataReader reader = cmd.ExecuteReader())
-                                    {                             
-                                        if (reader.Read())
-                                        {
-                                            String alamat = "Blok " + reader.GetValue(4) + " No. " + reader.GetValue(5);
-                                            alamat += " RT " + reader.GetValue(6) + "/09";
+                                    conn.Open();
 
-                                            oSheet.Cells[3, 3] = reader.GetValue(0);
-                                            oSheet.Cells[4, 3] = "'" + string.Format("{0:00}", reader.GetValue(1)) + "." + reader.GetValue(6);
-                                            oSheet.Cells[5, 3] = reader.GetValue(2);
-                                            oSheet.Cells[6, 3] = alamat;
-                                            oSheet.Cells[7, 3] = reader.GetValue(3);
-                                        }
-                                    }
-                                }
-                                conn.Close();
-                            }
-                            //bulanDic[cbAnggota.SelectedValue.ToString()];
-
-                            int init_row = 9;
-                            oSheet.Cells[1, 1].ColumnWidth = 4;
-                            oSheet.Cells[1, 2].ColumnWidth = 28;
-                            oSheet.Cells[1, 3].ColumnWidth = 28;
-                            oSheet.Cells[1, 4].ColumnWidth = 18;
-                            oSheet.Cells[1, 5].ColumnWidth = 14;
-                            
-
-                            //Add table headers going cell by cell.
-                            oSheet.Cells[init_row, 1] = "No.";
-                            oSheet.Cells[init_row, 2] = "Bulan";
-                            oSheet.Cells[init_row, 3] = "No. Kuitansi";
-                            oSheet.Cells[init_row, 4] = "Tanggal Pembayaran";
-                            oSheet.Cells[init_row, 5] = "Jumlah";
-                            
-                            oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 5]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
-                            oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 5]].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
-                            oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 5]].Style.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
-                            oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 5]].WrapText = true;
-
-                            oSheet.Cells[init_row, 1].EntireRow.Font.Bold = true;
-                            oSheet.Cells[init_row, 1].RowHeight = 18;
-
-                            init_row++;
-
-                            int total = 0;
-
-                            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
-                            {
-                                conn.Open();
-
-                                String query = "SELECT strftime('%m', tanggal) as bln, no_invoice, invoice_suffix, tgl_bayar, jumlah ";
-                                query += "FROM pembayaran p ";
-                                query += "JOIN meteran m ON m.id = p.meteran_id ";                                
-                                query += "WHERE strftime('%Y', tgl_bayar) = '" + tahun + "' ";
-                                query += "AND member_id  = " + memberID + " ";
-                                query += "ORDER BY bln";
-
-                                using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
-                                {
-                                    using (SQLiteDataReader reader = cmd.ExecuteReader())
+                                    String query = "";
+                                    if (pemakaianRB.Checked)
                                     {
-                                        int no = 1;
-                                        while (reader.Read())
+                                        query = "SELECT no_invoice, invoice_suffix, member_id, urut_rt, nama, rt, tgl_bayar, jumlah, awal, akhir, bayar ";
+                                        query += "FROM meteran m ";
+                                        query += "LEFT JOIN pembayaran p ON m.id = p.meteran_id ";
+                                        query += "JOIN members u ON u.id = m.member_id ";
+                                        query += "WHERE m.tanggal = '" + tanggal + "' ";
+                                        query += "AND awal IS NOT NULL AND akhir IS NOT NULL ";
+                                        query += "ORDER BY rt, nama";
+                                    }
+                                    else
+                                    {
+                                        query = "SELECT no_invoice, invoice_suffix, member_id, urut_rt, nama, rt, tgl_bayar, jumlah, awal, akhir, bayar ";
+                                        query += "FROM pembayaran p ";
+                                        query += "JOIN meteran m ON m.id = p.meteran_id ";
+                                        query += "JOIN members u ON u.id = m.member_id ";
+                                        query += "WHERE strftime('%m', tgl_bayar) = '" + string.Format("{0:00}", x) +"' ";
+                                        query += "AND strftime('%Y', tgl_bayar)  = '" + tahun + "' ";
+                                        query += "ORDER BY rt, urut_rt";
+                                    }
+                                    
+
+                                    System.Diagnostics.Debug.WriteLine(query);
+
+                                    using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
+                                    {
+                                        using (SQLiteDataReader reader = cmd.ExecuteReader())
                                         {
-                                            oSheet.Cells[init_row, 1] = no;
-                                            oSheet.Cells[init_row, 2] = bulanDic[reader.GetValue(0).ToString()];
-                                            oSheet.Cells[init_row, 3] = string.Format("{0:000}", reader.GetValue(1)) + reader.GetValue(2).ToString();
-                                            oSheet.Cells[init_row, 4] = "'" + reader.GetValue(3).ToString();
-                                            oSheet.Cells[init_row, 5] = reader.GetValue(4).ToString(); 
+                                            int no = 1;
+                                                while (reader.Read())
+                                                {
+                                                    double pemakaian = reader.GetDouble(9) - reader.GetDouble(8);
 
-                                            total += reader.GetInt32(4);
+                                                    string tgl_pembayaran = "";
+                                                    string keterangan = "";
+                                                    Int32 jumlah = 0;
 
-                                            no++;
-                                            init_row++;
+                                                    if (reader.GetInt32(10) == 1)
+                                                    {
+                                                        keterangan = "Lunas";
+                                                        tgl_pembayaran = reader.GetDateTime(6).ToString();
+                                                        jumlah = reader.GetInt32(7);
+                                                    }
+                                                    else
+                                                    {
+                                                        keterangan = "Belum Dibayar";
+                                                        oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Orange);
+                                                    }
+
+                                                    oSheet.Cells[row, 1] = no;
+                                                    oSheet.Cells[row, 2] = string.Format("{0:000}", reader.GetValue(0)) + reader.GetValue(1).ToString();
+                                                    oSheet.Cells[row, 3] = "'" + reader.GetValue(3).ToString() + "." + reader.GetValue(5).ToString(); //No Urut
+                                                    oSheet.Cells[row, 4] = reader.GetValue(4).ToString(); //Nama
+                                                    oSheet.Cells[row, 5] = "'" + reader.GetValue(5).ToString() + " /09";
+                                                    oSheet.Cells[row, 6] = tgl_pembayaran;
+                                                    oSheet.Cells[row, 7] = pemakaian.ToString(); //Pemakaian                                        
+                                                    oSheet.Cells[row, 8] = jumlah;
+                                                    oSheet.Cells[row, 9] = keterangan;
+
+                                                    no++;
+                                                    row++;
+                                                }
                                         }
                                     }
+                                    conn.Close();
                                 }
+
+                                oSheet.Cells[row, 1] = "Jumlah";
+                                oSheet.Cells[row, 7] = "=sum(G" + start_row + ":G" + (row - 1) + ")";
+                                oSheet.Cells[row, 8] = "=sum(H" + start_row + ":H" + (row - 1) + ")";
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 6]].Merge();
+                                oSheet.Cells[row, 1].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+                                oSheet.Cells[row, 1].Font.Bold = true;
+                                oSheet.Cells[row, 7].Font.Bold = true;
+                                oSheet.Cells[row, 8].Font.Bold = true;
+
+                                oSheet.get_Range("D" + start_row + "", "D" + row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft;
+                                oSheet.get_Range("G" + start_row + "", "H" + row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
+                                oSheet.get_Range("F" + start_row + "", "F" + row).NumberFormat = "dd/mm/yyyy hh:mm";
+                                //oSheet.get_Range("G4", "G" + init_row).NumberFormat = "#,###,###";
+                                oSheet.get_Range("H" + start_row + "", "H" + row).NumberFormat = "#,###,###";
+                                oSheet.get_Range("A" + start_row + "", "I" + row).Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
+
+                                row += 4;
                             }
 
-                            oSheet.Cells[init_row, 1] = "Jumlah";
-                            oSheet.Cells[init_row, 5] = total;
-                            oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 4]].Merge();
-                            oSheet.Cells[init_row, 1].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
-                            oSheet.Cells[init_row, 1].Font.Bold = true;
-                            oSheet.Cells[init_row, 5].Font.Bold = true;
-
-                            //oSheet.get_Range("E4", "E" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft;
-                            oSheet.get_Range("A3", "C7").Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft;
-                            oSheet.get_Range("A3", "C7").Font.Bold = true;
-
-                            oSheet.get_Range("E10", "E" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
-                            oSheet.get_Range("D10", "D" + init_row).NumberFormat = "dd/mm/yyyy hh:mm";
-                            oSheet.get_Range("E10", "E" + init_row).NumberFormat = "#,###,###";
-                            oSheet.get_Range("A9", "E" + init_row).Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
 
                             //Make sure Excel is visible and give the user control
                             //of Microsoft Excel's lifetime.
@@ -238,17 +277,18 @@ namespace Artesis
                             //oWB.Close();
 
                             MessageBox.Show("Laporan Telah Disimpan");
+                            
                         }
                         catch (Exception theException)
-                        {
-                            String errorMessage;
-                            errorMessage = "Error: ";
-                            errorMessage = String.Concat(errorMessage, theException.Message);
-                            errorMessage = String.Concat(errorMessage, " Line: ");
-                            errorMessage = String.Concat(errorMessage, theException.Source);
+                            {
+                                String errorMessage;
+                                errorMessage = "Error: ";
+                                errorMessage = String.Concat(errorMessage, theException.Message);
+                                errorMessage = String.Concat(errorMessage, " Line: ");
+                                errorMessage = String.Concat(errorMessage, theException.Source);
 
-                            MessageBox.Show(errorMessage, "Error");
-                        }
+                                MessageBox.Show(errorMessage, "Error");
+                            }
                     }
                 }
                 catch (Exception ex)
@@ -259,9 +299,8 @@ namespace Artesis
             }
             else
             {
-                MessageBox.Show("Pilih Anggota");
+                MessageBox.Show("Cek Pilihan Bulan");
             }
-
         }
 
         private void releaseObject(object obj)
@@ -282,55 +321,19 @@ namespace Artesis
             }
         }
 
-        private void prepareComboBoxMember()
+        private void cbBulan_KeyPress(object sender, KeyPressEventArgs e)
         {
-            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
+            if (e.KeyChar == (char)13)
             {
-                conn.Open();
-
-                DataTable dt = new DataTable();
-                string command = "SELECT id, nama || ' (' || id || ')' as nama_anggota FROM members WHERE active = 1 ORDER BY nama_anggota";
-                using (SQLiteDataAdapter da = new SQLiteDataAdapter(command, conn))
-                {
-                    dt.Columns.Add("id", typeof(string));
-                    dt.Columns.Add("nama_anggota", typeof(string));
-
-                    DataRow row = dt.NewRow();
-                    row["Id"] = 0;
-                    row["nama_anggota"] = "- Pilih Anggota - ";
-                    dt.Rows.Add(row);
-
-                    da.Fill(dt);
-
-                    cbAnggota.ValueMember = "id";
-                    cbAnggota.DisplayMember = "nama_anggota";
-                    cbAnggota.DataSource = dt;
-                }
-
-                conn.Close();
+                this.reportMonthBtn_Click(sender, e);
             }
         }
-
-        public string getMember(int id)
+        
+        private void CBTahun_KeyPress(object sender, KeyPressEventArgs e)
         {
-            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source =" + Program.path_db))
+            if (e.KeyChar == (char)13)
             {
-                conn.Open();
-                string command = "SELECT nama FROM members WHERE id = " + id;
-                using (SQLiteCommand query = new SQLiteCommand(command, conn))
-                {
-                    using (SQLiteDataReader reader = query.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            return reader.GetValue(0).ToString();
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                }
+                this.reportMonthBtn_Click(sender, e);
             }
         }
 

@@ -100,17 +100,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="viewBayarFrm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="viewBayarFrm.Designer.cs">
-      <DependentUpon>viewBayarFrm.cs</DependentUpon>
-    </Compile>
     <Compile Include="reportTahunan.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="reportTahunan.Designer.cs">
       <DependentUpon>reportTahunan.cs</DependentUpon>
+    </Compile>
+    <Compile Include="reportPelanggan.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="reportPelanggan.Designer.cs">
+      <DependentUpon>reportPelanggan.cs</DependentUpon>
+    </Compile>
+    <Compile Include="viewBayarFrm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="viewBayarFrm.Designer.cs">
+      <DependentUpon>viewBayarFrm.cs</DependentUpon>
     </Compile>
     <Compile Include="reportHarian.cs">
       <SubType>Form</SubType>
@@ -165,11 +171,14 @@
     <EmbeddedResource Include="About.resx">
       <DependentUpon>About.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="viewBayarFrm.resx">
-      <DependentUpon>viewBayarFrm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="reportTahunan.resx">
       <DependentUpon>reportTahunan.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="reportPelanggan.resx">
+      <DependentUpon>reportPelanggan.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="viewBayarFrm.resx">
+      <DependentUpon>viewBayarFrm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="reportHarian.resx">
       <DependentUpon>reportHarian.cs</DependentUpon>
@@ -249,6 +258,8 @@
     <None Include="Resources\import-export-16.png" />
     <None Include="Resources\icon_view_16.png" />
     <None Include="Resources\export.png" />
+    <None Include="Resources\logo.png" />
+    <None Include="Resources\logo64.png" />
     <Content Include="water.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
