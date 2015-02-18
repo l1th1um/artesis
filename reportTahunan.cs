@@ -104,8 +104,8 @@ namespace Artesis
                 }
                     
 
-                sfd.FileName = "Laporan " + title + " " + bulanDic[blnAwal.SelectedValue.ToString()] + "-" + bulanDic[blnAkhir.SelectedValue.ToString()] + " Tahun " + tahun + ".xls";
-                sfd.Filter = "Excel files |*.xls";
+                sfd.FileName = "Laporan " + title + " " + bulanDic[blnAwal.SelectedValue.ToString()] + "-" + bulanDic[blnAkhir.SelectedValue.ToString()] + " Tahun " + tahun + ".xlsx";
+                sfd.Filter = "Excel files |*.xlsx";
                 sfd.RestoreDirectory = true;
 
                 try
@@ -141,16 +141,18 @@ namespace Artesis
                                 oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].Merge();
                                 oSheet.Cells[row, 1].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
 
-                                row += 2;
+                                row += 2;                                
+
                                 oSheet.Cells[row, 1].ColumnWidth = 4;
                                 oSheet.Cells[row, 2].ColumnWidth = 28;
                                 oSheet.Cells[row, 3].ColumnWidth = 10;
                                 oSheet.Cells[row, 4].ColumnWidth = 22;
                                 oSheet.Cells[row, 5].ColumnWidth = 8;
                                 oSheet.Cells[row, 6].ColumnWidth = 18;
-                                oSheet.Cells[row, 7].ColumnWidth = 12;
-                                oSheet.Cells[row, 8].ColumnWidth = 14;
-                                oSheet.Cells[row, 9].ColumnWidth = 13;
+                                oSheet.Cells[row, 7].ColumnWidth = 22;
+                                oSheet.Cells[row, 8].ColumnWidth = 12;
+                                oSheet.Cells[row, 9].ColumnWidth = 14;
+                                oSheet.Cells[row, 10].ColumnWidth = 13;
 
                                 //Add table headers going cell by cell.
                                 oSheet.Cells[row, 1] = "No.";
@@ -158,15 +160,17 @@ namespace Artesis
                                 oSheet.Cells[row, 3] = "No. Pelanggan";
                                 oSheet.Cells[row, 4] = "Nama";
                                 oSheet.Cells[row, 5] = "RT";
-                                oSheet.Cells[row, 6] = "Tanggal Pembayaran";
-                                oSheet.Cells[row, 7] = "Pemakaian";
-                                oSheet.Cells[row, 8] = "Jumlah";
-                                oSheet.Cells[row, 9] = "Keterangan";
+                                oSheet.Cells[row, 6] = "Periode";
+                                oSheet.Cells[row, 7] = "Tanggal Pembayaran";
+                                oSheet.Cells[row, 8] = "Pemakaian";
+                                oSheet.Cells[row, 9] = "Jumlah";
+                                oSheet.Cells[row, 10] = "Keterangan";
 
-                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
-                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
-                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].Style.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
-                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].WrapText = true;
+                                int total_col = 10;
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, total_col]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, total_col]].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, total_col]].Style.VerticalAlignment = Excel.XlVAlign.xlVAlignCenter;
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, total_col]].WrapText = true;
 
                                 oSheet.Cells[row, 1].EntireRow.Font.Bold = true;
                                 oSheet.Cells[row, 1].RowHeight = 18;
@@ -182,7 +186,7 @@ namespace Artesis
                                     String query = "";
                                     if (pemakaianRB.Checked)
                                     {
-                                        query = "SELECT no_invoice, invoice_suffix, member_id, urut_rt, nama, rt, tgl_bayar, jumlah, awal, akhir, bayar ";
+                                        query = "SELECT no_invoice, invoice_suffix, member_id, urut_rt, nama, rt, tgl_bayar, jumlah, awal, akhir, bayar, m.tanggal ";
                                         query += "FROM meteran m ";
                                         query += "LEFT JOIN pembayaran p ON m.id = p.meteran_id ";
                                         query += "JOIN members u ON u.id = m.member_id ";
@@ -192,7 +196,7 @@ namespace Artesis
                                     }
                                     else
                                     {
-                                        query = "SELECT no_invoice, invoice_suffix, member_id, urut_rt, nama, rt, tgl_bayar, jumlah, awal, akhir, bayar ";
+                                        query = "SELECT no_invoice, invoice_suffix, member_id, urut_rt, nama, rt, tgl_bayar, jumlah, awal, akhir, bayar, m.tanggal ";
                                         query += "FROM pembayaran p ";
                                         query += "JOIN meteran m ON m.id = p.meteran_id ";
                                         query += "JOIN members u ON u.id = m.member_id ";
@@ -209,6 +213,9 @@ namespace Artesis
                                         using (SQLiteDataReader reader = cmd.ExecuteReader())
                                         {
                                             int no = 1;
+
+                                            if (reader.HasRows)
+                                            {
                                                 while (reader.Read())
                                                 {
                                                     double pemakaian = reader.GetDouble(9) - reader.GetDouble(8);
@@ -220,13 +227,13 @@ namespace Artesis
                                                     if (reader.GetInt32(10) == 1)
                                                     {
                                                         keterangan = "Lunas";
-                                                        tgl_pembayaran = reader.GetDateTime(6).ToString();
+                                                        tgl_pembayaran = String.Format(new System.Globalization.CultureInfo("id-ID"), "{0:dd MMMM yyyy HH:mm}", reader.GetDateTime(6));
                                                         jumlah = reader.GetInt32(7);
                                                     }
                                                     else
                                                     {
                                                         keterangan = "Belum Dibayar";
-                                                        oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 9]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Orange);
+                                                        oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 10]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Orange);
                                                     }
 
                                                     oSheet.Cells[row, 1] = no;
@@ -234,34 +241,42 @@ namespace Artesis
                                                     oSheet.Cells[row, 3] = "'" + reader.GetValue(3).ToString() + "." + reader.GetValue(5).ToString(); //No Urut
                                                     oSheet.Cells[row, 4] = reader.GetValue(4).ToString(); //Nama
                                                     oSheet.Cells[row, 5] = "'" + reader.GetValue(5).ToString() + " /09";
-                                                    oSheet.Cells[row, 6] = tgl_pembayaran;
-                                                    oSheet.Cells[row, 7] = pemakaian.ToString(); //Pemakaian                                        
-                                                    oSheet.Cells[row, 8] = jumlah;
-                                                    oSheet.Cells[row, 9] = keterangan;
+                                                    oSheet.Cells[row, 6] = String.Format(new System.Globalization.CultureInfo("id-ID"), "{0:MMMM yyyy}", reader.GetDateTime(11)); ; //Periode
+                                                    oSheet.Cells[row, 7] = tgl_pembayaran;
+                                                    oSheet.Cells[row, 8] = pemakaian.ToString(); //Pemakaian                                        
+                                                    oSheet.Cells[row, 9] = jumlah;
+                                                    oSheet.Cells[row, 10] = keterangan;
 
                                                     no++;
                                                     row++;
                                                 }
+                                            }
                                         }
                                     }
                                     conn.Close();
                                 }
 
                                 oSheet.Cells[row, 1] = "Jumlah";
-                                oSheet.Cells[row, 7] = "=sum(G" + start_row + ":G" + (row - 1) + ")";
                                 oSheet.Cells[row, 8] = "=sum(H" + start_row + ":H" + (row - 1) + ")";
-                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 6]].Merge();
+                                oSheet.Cells[row, 9] = "=sum(I" + start_row + ":I" + (row - 1) + ")";
+                                oSheet.Range[oSheet.Cells[row, 1], oSheet.Cells[row, 7]].Merge();
                                 oSheet.Cells[row, 1].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
                                 oSheet.Cells[row, 1].Font.Bold = true;
-                                oSheet.Cells[row, 7].Font.Bold = true;
                                 oSheet.Cells[row, 8].Font.Bold = true;
+                                oSheet.Cells[row, 9].Font.Bold = true;
 
                                 oSheet.get_Range("D" + start_row + "", "D" + row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft;
-                                oSheet.get_Range("G" + start_row + "", "H" + row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
+                                oSheet.get_Range("H" + start_row + "", "I" + row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
                                 oSheet.get_Range("F" + start_row + "", "F" + row).NumberFormat = "dd/mm/yyyy hh:mm";
                                 //oSheet.get_Range("G4", "G" + init_row).NumberFormat = "#,###,###";
                                 oSheet.get_Range("H" + start_row + "", "H" + row).NumberFormat = "#,###,###";
-                                oSheet.get_Range("A" + start_row + "", "I" + row).Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
+                                oSheet.get_Range("I" + start_row + "", "I" + row).NumberFormat = "#,###,###";
+                                oSheet.get_Range("A" + start_row + "", "J" + row).Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
+
+                                if (pemakaianRB.Checked)
+                                {
+                                    oSheet.get_Range("F" + start_row + "", "F" + row).EntireColumn.Hidden = true;
+                                }
 
                                 row += 4;
                             }

@@ -117,8 +117,8 @@ namespace Artesis
                 string periodeAwal = String.Format("{0}-{1}-{2}", tahunAwal, awalBln.SelectedValue.ToString(), hariAwal);
                 string periodeAkhir = String.Format("{0}-{1}-{2}", tahunAkhir, akhirBln.SelectedValue.ToString(), hariAkhir);
 
-                sfd.FileName = "Laporan Tanggal " + periode + ".xls";
-                sfd.Filter = "Excel files |*.xls";
+                sfd.FileName = "Laporan Tanggal " + periode + ".xlsx";
+                sfd.Filter = "Excel files |*.xlsx";
                 sfd.RestoreDirectory = true;
 
                 try
@@ -155,7 +155,7 @@ namespace Artesis
                             oSheet.Cells[1, 3].ColumnWidth = 10;
                             oSheet.Cells[1, 4].ColumnWidth = 22;
                             oSheet.Cells[1, 5].ColumnWidth = 8;
-                            oSheet.Cells[1, 6].ColumnWidth = 18;
+                            oSheet.Cells[1, 6].ColumnWidth = 22;
                             oSheet.Cells[1, 7].ColumnWidth = 14;
 
                             //Add table headers going cell by cell.
@@ -187,7 +187,7 @@ namespace Artesis
                                 query += "JOIN meteran m ON m.id = p.meteran_id ";
                                 query += "JOIN members u ON u.id = m.member_id ";
                                 query += "WHERE tgl_bayar BETWEEN '" + periodeAwal + "' AND '" + periodeAkhir + "' ";
-                                query += "ORDER BY rt, nama";
+                                query += "ORDER BY tgl_bayar, rt, nama";
 
                                 //System.Diagnostics.Debug.WriteLine(query);
 
@@ -203,7 +203,7 @@ namespace Artesis
                                             oSheet.Cells[init_row, 3] = "'" + reader.GetValue(3).ToString() + "." + reader.GetValue(5).ToString(); //No Urut
                                             oSheet.Cells[init_row, 4] = reader.GetValue(4).ToString(); //Nama
                                             oSheet.Cells[init_row, 5] = "'" + reader.GetValue(5).ToString() + " /09";
-                                            oSheet.Cells[init_row, 6] = reader.GetDateTime(6).ToString();
+                                            oSheet.Cells[init_row, 6] = String.Format(new System.Globalization.CultureInfo("id-ID"), "{0:dd MMMM yyyy HH:mm}", reader.GetDateTime(6)); 
                                             oSheet.Cells[init_row, 7] = reader.GetValue(7);
 
                                             total += reader.GetInt32(7);

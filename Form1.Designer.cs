@@ -41,6 +41,7 @@
             this.pelangganToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.harianToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bulananToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tahunanToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tentangToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panelTagihan = new System.Windows.Forms.Panel();
@@ -115,7 +116,6 @@
             this.btnAddMember = new System.Windows.Forms.Button();
             this.dataGridViewMember = new System.Windows.Forms.DataGridView();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.tahunanToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.panelTagihan.SuspendLayout();
             this.gbTagihan.SuspendLayout();
@@ -212,23 +212,30 @@
             // pelangganToolStripMenuItem
             // 
             this.pelangganToolStripMenuItem.Name = "pelangganToolStripMenuItem";
-            this.pelangganToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.pelangganToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
             this.pelangganToolStripMenuItem.Text = "Pelanggan ";
             this.pelangganToolStripMenuItem.Click += new System.EventHandler(this.pelangganToolStripMenuItem_Click);
             // 
             // harianToolStripMenuItem
             // 
             this.harianToolStripMenuItem.Name = "harianToolStripMenuItem";
-            this.harianToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.harianToolStripMenuItem.Text = "Harian";
+            this.harianToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.harianToolStripMenuItem.Text = "Pemasukkan Harian";
             this.harianToolStripMenuItem.Click += new System.EventHandler(this.harianToolStripMenuItem_Click);
             // 
             // bulananToolStripMenuItem
             // 
             this.bulananToolStripMenuItem.Name = "bulananToolStripMenuItem";
-            this.bulananToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.bulananToolStripMenuItem.Text = "Bulanan";
+            this.bulananToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.bulananToolStripMenuItem.Text = "Pemakaian Bulanan";
             this.bulananToolStripMenuItem.Click += new System.EventHandler(this.bulananToolStripMenuItem_Click);
+            // 
+            // tahunanToolStripMenuItem
+            // 
+            this.tahunanToolStripMenuItem.Name = "tahunanToolStripMenuItem";
+            this.tahunanToolStripMenuItem.Size = new System.Drawing.Size(179, 22);
+            this.tahunanToolStripMenuItem.Text = "Tahunan";
+            this.tahunanToolStripMenuItem.Click += new System.EventHandler(this.tahunanToolStripMenuItem_Click);
             // 
             // exitToolStripMenuItem
             // 
@@ -1063,13 +1070,6 @@
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
-            // 
-            // tahunanToolStripMenuItem
-            // 
-            this.tahunanToolStripMenuItem.Name = "tahunanToolStripMenuItem";
-            this.tahunanToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.tahunanToolStripMenuItem.Text = "Tahunan";
-            this.tahunanToolStripMenuItem.Click += new System.EventHandler(this.tahunanToolStripMenuItem_Click);
             // 
             // Form1
             // 

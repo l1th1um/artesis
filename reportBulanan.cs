@@ -89,8 +89,8 @@ namespace Artesis
             String bulan = bulanDic[cbBulan.SelectedValue.ToString()];
             String tahun = CBTahun.SelectedItem.ToString();
 
-            sfd.FileName = "Laporan Bulan " + bulan + " " + tahun + ".xls";
-            sfd.Filter = "Excel files |*.xls";
+            sfd.FileName = "Laporan Bulan " + bulan + " " + tahun + ".xlsx";
+            sfd.Filter = "Excel files |*.xlsx";
             sfd.RestoreDirectory = true;
 
             try
@@ -127,7 +127,7 @@ namespace Artesis
                         oSheet.Cells[1, 3].ColumnWidth = 10;
                         oSheet.Cells[1, 4].ColumnWidth = 22;
                         oSheet.Cells[1, 5].ColumnWidth = 8;
-                        oSheet.Cells[1, 6].ColumnWidth = 18;
+                        oSheet.Cells[1, 6].ColumnWidth = 22;
                         oSheet.Cells[1, 7].ColumnWidth = 12;
                         oSheet.Cells[1, 8].ColumnWidth = 14;
                         oSheet.Cells[1, 9].ColumnWidth = 13;
@@ -165,9 +165,9 @@ namespace Artesis
                             query += "JOIN members u ON u.id = m.member_id ";
                             query += "WHERE m.tanggal = '" + periode + "' ";
                             query += "AND awal IS NOT NULL AND akhir IS NOT NULL ";
-                            query += "ORDER BY rt, nama";
+                            query += "ORDER BY rt,bayar DESC, nama";
                             
-                            System.Diagnostics.Debug.WriteLine(query);
+                            //System.Diagnostics.Debug.WriteLine(query);
 
                             using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
                             {
@@ -185,7 +185,7 @@ namespace Artesis
                                         if (reader.GetInt32(10) == 1)
                                         {
                                             keterangan = "Lunas";
-                                            tgl_pembayaran = reader.GetDateTime(6).ToString();
+                                            tgl_pembayaran = String.Format(new System.Globalization.CultureInfo("id-ID"), "{0:dd MMMM yyyy HH:mm}", reader.GetDateTime(6)); 
                                             jumlah = reader.GetInt32(7);
                                         }
                                         else

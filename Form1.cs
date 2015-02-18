@@ -528,14 +528,14 @@ namespace Artesis
                 string member_id = dgvMeteran.CurrentRow.Cells["id"].Value.ToString();
                 int columnIdx = e.ColumnIndex;
                 double meteranVal = (double)dgvMeteran.CurrentRow.Cells[columnIdx].Value;
-
+                                
                 String field = "awal";
 
-                if (columnIdx == 3)
+                if (columnIdx == 6)
                 {
                     if (dgvMeteran.CurrentRow.Cells[2].Value != DBNull.Value)
                     {
-                        if (float.Parse(dgvMeteran.CurrentRow.Cells[3].Value.ToString()) <= float.Parse(dgvMeteran.CurrentRow.Cells[2].Value.ToString()))
+                        if (float.Parse(dgvMeteran.CurrentRow.Cells[6].Value.ToString()) <= float.Parse(dgvMeteran.CurrentRow.Cells[5].Value.ToString()))
                         {
                             MessageBox.Show("Meteran akhir harus lebih besar daripada meteran awal");
                             return;
@@ -559,9 +559,9 @@ namespace Artesis
                         SQLiteCommand cmd2 = new SQLiteCommand("INSERT INTO meteran ('" + field + "', member_id, tanggal, bayar, updated_at)  VALUES(" + meteranVal + ",  " + member_id + ",'" + tglTxt.Text + "', 0, datetime('now') )", conn);
                         cmd2.ExecuteNonQuery();
 
-                        if (columnIdx == 3)
+                        if (columnIdx == 6)
                         {
-                            SQLiteCommand cmd3 = new SQLiteCommand("UPDATE meteran SET  awal = '" + float.Parse(dgvMeteran.CurrentRow.Cells[2].Value.ToString()) + "', updated_at = datetime('now') WHERE  member_id = " + member_id + " AND bayar = 0 AND tanggal = '" + tglTxt.Text + "'", conn);
+                            SQLiteCommand cmd3 = new SQLiteCommand("UPDATE meteran SET  awal = '" + float.Parse(dgvMeteran.CurrentRow.Cells[5].Value.ToString()) + "', updated_at = datetime('now') WHERE  member_id = " + member_id + " AND bayar = 0 AND tanggal = '" + tglTxt.Text + "'", conn);
                             cmd3.ExecuteNonQuery();
                         }
                     }
@@ -1160,13 +1160,13 @@ namespace Artesis
 
                             Dictionary<string, string> tarifDict = new Dictionary<string, string>();
 
-                            tarifDict.Add("beban", string.Format("{0:N0}", reader["beban_tetap"]));
-                            tarifDict.Add("denda", string.Format("{0:N0}", reader["denda"]));
-                            tarifDict.Add("tarif1", string.Format("{0:N0}", reader["tarif1"]));
-                            tarifDict.Add("tarif2", string.Format("{0:N0}", reader["tarif2"]));
-                            tarifDict.Add("tarif3", string.Format("{0:N0}", reader["tarif3"]));
-                            tarifDict.Add("tarif4", string.Format("{0:N0}", reader["tarif4"]));
-                            tarifDict.Add("tarif5", string.Format("{0:N0}", reader["tarif5"]));
+                            tarifDict.Add("beban", string.Format(new System.Globalization.CultureInfo("id-ID"), "{0:N0}", reader["beban_tetap"]));
+                            tarifDict.Add("denda", string.Format(new System.Globalization.CultureInfo("id-ID"), "{0:N0}", reader["denda"]));
+                            tarifDict.Add("tarif1", string.Format(new System.Globalization.CultureInfo("id-ID"), "{0:N0}", reader["tarif1"]));
+                            tarifDict.Add("tarif2", string.Format(new System.Globalization.CultureInfo("id-ID"), "{0:N0}", reader["tarif2"]));
+                            tarifDict.Add("tarif3", string.Format(new System.Globalization.CultureInfo("id-ID"), "{0:N0}", reader["tarif3"]));
+                            tarifDict.Add("tarif4", string.Format(new System.Globalization.CultureInfo("id-ID"), "{0:N0}", reader["tarif4"]));
+                            tarifDict.Add("tarif5", string.Format(new System.Globalization.CultureInfo("id-ID"), "{0:N0}", reader["tarif5"]));
 
                             jsonTarif = tarifDict.FromDictionaryToJson();
                         }
@@ -1312,25 +1312,91 @@ namespace Artesis
                 {
                     conn.Open();
 
+                    String insertCmd = "INSERT INTO members (urut_rt, nama, telp, blok, no_rumah, rt, active, created_at) ";
+                    int j = 1;
+
+                    FrmAnggota frmAnggota = new FrmAnggota();
+
+                    Dictionary<string, int> urut_rt = new Dictionary<string, int>();
+
+                    urut_rt.Add("01", frmAnggota.maxUrutRT("01") + 1);
+                    urut_rt.Add("02", frmAnggota.maxUrutRT("02") + 1);
+                    urut_rt.Add("03", frmAnggota.maxUrutRT("03") + 1);
+                    urut_rt.Add("04", frmAnggota.maxUrutRT("04") + 1);
+                    urut_rt.Add("05", frmAnggota.maxUrutRT("05") + 1);
+                    urut_rt.Add("06", frmAnggota.maxUrutRT("06") + 1);
+                    urut_rt.Add("07", frmAnggota.maxUrutRT("07") + 1);
+                    
+
                     for (int i = 2; i <= lastRow; i++)
                     {
                         System.Array data = (System.Array)oSheet.get_Range("A" + i.ToString(), "E" + i.ToString()).Cells.Value;
 
+                        
                         if (data.GetValue(1, 1) != null && data.GetValue(1, 2) != null && data.GetValue(1, 3) != null && data.GetValue(1, 4) != null && data.GetValue(1, 5) != null)
                         {
-                            FrmAnggota frmAnggota = new FrmAnggota();
-                            int urut_rt = frmAnggota.maxUrutRT(data.GetValue(1, 5).ToString()) + 1;
+                            
+                            //String insertCmd = "INSERT INTO members(urut_rt, nama, telp, blok, no_rumah, rt, active, created_at) ";
+                            //insertCmd += "VALUES (" + urut_rt + ", '" + data.GetValue(1, 1).ToString() + "', '" + data.GetValue(1, 2).ToString() + "', '" + data.GetValue(1, 3).ToString() + "',";
+                            //insertCmd += "'" + data.GetValue(1, 4).ToString() + "', '" + data.GetValue(1, 5).ToString() + "', 1, datetime('now'))";
 
-                            String insertCmd = "INSERT INTO members(urut_rt, nama, telp, blok, no_rumah, rt, active, created_at) ";
-                            insertCmd += "VALUES (" + urut_rt + ", '" + data.GetValue(1, 1).ToString() + "', '" + data.GetValue(1, 2).ToString() + "', '" + data.GetValue(1, 3).ToString() + "',";
-                            insertCmd += "'" + data.GetValue(1, 4).ToString() + "', '" + data.GetValue(1, 5).ToString() + "', 1, datetime('now'))";
-
-                            Console.WriteLine(insertCmd);
-
-                            using (SQLiteCommand cmd = new SQLiteCommand(insertCmd, conn))
+                            //Console.WriteLine(insertCmd);
+                            
+                            if (j == 1)
                             {
-                                cmd.ExecuteNonQuery();
+                                insertCmd += " SELECT  " + urut_rt[data.GetValue(1, 5).ToString()] + " AS urut_rt, '" + data.GetValue(1, 1).ToString() + "' AS nama, ";
+                                insertCmd += " '" + data.GetValue(1, 2).ToString() + "' AS telp, ";
+                                insertCmd += " '" + data.GetValue(1, 3).ToString() + "' AS blok, ";
+                                insertCmd += " '" + data.GetValue(1, 4).ToString() + "' AS no_rumah, '" + data.GetValue(1, 5).ToString() + "' AS rt, ";
+                                insertCmd += " 1 as active, datetime('now') as created_at ";
                             }
+                            else
+                            {
+                                insertCmd += " UNION SELECT  " + urut_rt[data.GetValue(1, 5).ToString()] + ", '" + data.GetValue(1, 1).ToString() + "' , ";
+                                insertCmd += " '" + data.GetValue(1, 2).ToString() + "', '" + data.GetValue(1, 3).ToString() + "', ";
+                                insertCmd += " '" + data.GetValue(1, 4).ToString() + "', '" + data.GetValue(1, 5).ToString() + "', ";
+                                insertCmd += " 1 , datetime('now')  ";
+                            }
+
+                            urut_rt[data.GetValue(1, 5).ToString()] = urut_rt[data.GetValue(1, 5).ToString()] + 1;
+
+                            if (j % 400 == 0)
+                            {
+                                //Bulk Inserts
+                                using (SQLiteCommand cmd = new SQLiteCommand(insertCmd, conn))
+                                {
+                                    try
+                                    {
+                                        cmd.ExecuteNonQuery();
+                                        insertCmd = "INSERT INTO members (urut_rt, nama, telp, blok, no_rumah, rt, active, created_at) ";
+                                        System.Diagnostics.Debug.WriteLine("j == 400 => " + j);
+                                        System.Diagnostics.Debug.WriteLine(insertCmd);
+                                    }
+                                    catch (SQLiteException ex)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine(insertCmd);
+                                        System.Diagnostics.Debug.WriteLine("Ada Error Brud");
+                                    }
+                                }
+                            }                            
+
+                            j++;
+                        }
+                        
+                    }
+
+                    using (SQLiteCommand cmd = new SQLiteCommand(insertCmd, conn))
+                    {
+                        try
+                        {
+                            cmd.ExecuteNonQuery();
+                            System.Diagnostics.Debug.WriteLine("Outside Loop");
+                            System.Diagnostics.Debug.WriteLine(insertCmd);
+                        }
+                        catch (SQLiteException ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine(insertCmd);
+                            System.Diagnostics.Debug.WriteLine("Ada Error Brud");
                         }
                         
                     }
@@ -1448,8 +1514,8 @@ namespace Artesis
             //Buat Export Data Pelanggan
             SaveFileDialog sfd = new SaveFileDialog();
 
-            sfd.FileName = "Data Pelanggan.xls";
-            sfd.Filter = "Excel files |*.xls";
+            sfd.FileName = "Data Pelanggan.xlsx";
+            sfd.Filter = "Excel files |*.xlsx";
             sfd.RestoreDirectory = true;
 
             try
