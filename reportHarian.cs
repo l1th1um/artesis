@@ -186,10 +186,10 @@ namespace Artesis
                                 query += "FROM pembayaran p ";
                                 query += "JOIN meteran m ON m.id = p.meteran_id ";
                                 query += "JOIN members u ON u.id = m.member_id ";
-                                query += "WHERE tgl_bayar BETWEEN '" + periodeAwal + "' AND '" + periodeAkhir + "' ";
+                                query += "WHERE DATE(tgl_bayar) BETWEEN '" + periodeAwal + "' AND '" + periodeAkhir + "' ";
                                 query += "ORDER BY tgl_bayar, rt, nama";
 
-                                //System.Diagnostics.Debug.WriteLine(query);
+                                System.Diagnostics.Debug.WriteLine(query);
 
                                 using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
                                 {
@@ -200,7 +200,7 @@ namespace Artesis
                                         {
                                             oSheet.Cells[init_row, 1] = no;
                                             oSheet.Cells[init_row, 2] = string.Format("{0:000}", reader.GetValue(0)) + reader.GetValue(1).ToString();
-                                            oSheet.Cells[init_row, 3] = "'" + reader.GetValue(3).ToString() + "." + reader.GetValue(5).ToString(); //No Urut
+                                            oSheet.Cells[init_row, 3] = "'" + string.Format("{0:00}", reader.GetValue(3)) + "." + reader.GetValue(5).ToString(); //No Urut
                                             oSheet.Cells[init_row, 4] = reader.GetValue(4).ToString(); //Nama
                                             oSheet.Cells[init_row, 5] = "'" + reader.GetValue(5).ToString() + " /09";
                                             oSheet.Cells[init_row, 6] = String.Format(new System.Globalization.CultureInfo("id-ID"), "{0:dd MMMM yyyy HH:mm}", reader.GetDateTime(6)); 

@@ -106,6 +106,8 @@ namespace Artesis
                     Excel._Worksheet oSheet;
                     //Excel.Range oRng;
 
+                    Form1 frmUtama = new Form1();
+
                     try
                     {
                         //Start Excel and get Application object.
@@ -140,8 +142,8 @@ namespace Artesis
                         oSheet.Cells[init_row, 5] = "RT";
                         oSheet.Cells[init_row, 6] = "Tanggal Pembayaran";
                         oSheet.Cells[init_row, 7] = "Pemakaian";                        
-                        oSheet.Cells[init_row, 8] = "Jumlah";
-                        oSheet.Cells[init_row, 9] = "Keterangan";
+                        oSheet.Cells[init_row, 8] = "Lunas";
+                        oSheet.Cells[init_row, 9] = "Belum Lunas";
 
                         oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 9]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.LightGray);
                         oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 9]].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
@@ -165,7 +167,7 @@ namespace Artesis
                             query += "JOIN members u ON u.id = m.member_id ";
                             query += "WHERE m.tanggal = '" + periode + "' ";
                             query += "AND awal IS NOT NULL AND akhir IS NOT NULL ";
-                            query += "ORDER BY rt,bayar DESC, nama";
+                            query += "ORDER BY rt, bayar DESC, urut_rt,  nama";
                             
                             //System.Diagnostics.Debug.WriteLine(query);
 
@@ -179,30 +181,30 @@ namespace Artesis
                                         double pemakaian = reader.GetDouble(9) - reader.GetDouble(8);
 
                                         string tgl_pembayaran = "";
-                                        string keterangan = "";
-                                        Int32 jumlah = 0;
+                                        //string keterangan = "";
+                                        Int32 lunas = 0;
+                                        Int32 blm_lunas = 0;
 
                                         if (reader.GetInt32(10) == 1)
                                         {
-                                            keterangan = "Lunas";
-                                            tgl_pembayaran = String.Format(new System.Globalization.CultureInfo("id-ID"), "{0:dd MMMM yyyy HH:mm}", reader.GetDateTime(6)); 
-                                            jumlah = reader.GetInt32(7);
+                                            tgl_pembayaran = String.Format(new System.Globalization.CultureInfo("id-ID"), "{0:dd MMMM yyyy HH:mm}", reader.GetDateTime(6));
+                                            lunas = reader.GetInt32(7);
                                         }
                                         else
                                         {
-                                            keterangan = "Belum Dibayar";
+                                            blm_lunas = Convert.ToInt32(frmUtama.biayaPemakaian(Convert.ToDouble(pemakaian)));
                                             oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 9]].Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Orange);
                                         }
 
                                         oSheet.Cells[init_row, 1] = no;
-                                        oSheet.Cells[init_row, 2] = string.Format("{0:000}", reader.GetValue(0)) + reader.GetValue(1).ToString();                                        
-                                        oSheet.Cells[init_row, 3] = "'" + reader.GetValue(3).ToString() + "." + reader.GetValue(5).ToString(); //No Urut
+                                        oSheet.Cells[init_row, 2] = string.Format("{0:000}", reader.GetValue(0)) + reader.GetValue(1).ToString();
+                                        oSheet.Cells[init_row, 3] = "'" + string.Format("{0:00}", reader.GetValue(3)) + "." + reader.GetValue(5).ToString(); //No Urut
                                         oSheet.Cells[init_row, 4] = reader.GetValue(4).ToString() ; //Nama
-                                        oSheet.Cells[init_row, 5] = "'" + reader.GetValue(5).ToString() + " /09";
+                                        oSheet.Cells[init_row, 5] = "'" + reader.GetValue(5).ToString() + "/09";
                                         oSheet.Cells[init_row, 6] = tgl_pembayaran;
                                         oSheet.Cells[init_row, 7] = pemakaian.ToString(); //Pemakaian                                        
-                                        oSheet.Cells[init_row, 8] = jumlah;
-                                        oSheet.Cells[init_row, 9] = keterangan;
+                                        oSheet.Cells[init_row, 8] = lunas;
+                                        oSheet.Cells[init_row, 9] = blm_lunas;
 
                                         no++;
                                         init_row++;
@@ -215,17 +217,20 @@ namespace Artesis
                         oSheet.Cells[init_row, 1] = "Jumlah";
                         oSheet.Cells[init_row, 7] = "=sum(G4:G" + (init_row - 1) + ")";
                         oSheet.Cells[init_row, 8] = "=sum(H4:H" + (init_row - 1) + ")";
+                        oSheet.Cells[init_row, 9] = "=sum(I4:I" + (init_row - 1) + ")";
+
                         oSheet.Range[oSheet.Cells[init_row, 1], oSheet.Cells[init_row, 6]].Merge();
                         oSheet.Cells[init_row, 1].Style.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
                         oSheet.Cells[init_row, 1].Font.Bold = true;
                         oSheet.Cells[init_row, 7].Font.Bold = true;
                         oSheet.Cells[init_row, 8].Font.Bold = true;
+                        oSheet.Cells[init_row, 9].Font.Bold = true;
                          
                         oSheet.get_Range("D4", "D" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft;
-                        oSheet.get_Range("G4", "H" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
+                        oSheet.get_Range("G4", "I" + init_row).Cells.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
                         oSheet.get_Range("F4", "F" + init_row).NumberFormat = "dd/mm/yyyy hh:mm";
                         //oSheet.get_Range("G4", "G" + init_row).NumberFormat = "#,###,###";
-                        oSheet.get_Range("H4", "H" + init_row).NumberFormat = "#,###,###";
+                        oSheet.get_Range("H4", "I" + init_row).NumberFormat = "#,###,###";
                         oSheet.get_Range("A3", "I" + init_row).Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
                         
                         //Make sure Excel is visible and give the user control
